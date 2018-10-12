@@ -8,10 +8,17 @@ p = next player to move (p=1 or p=2)
 
 class Game:
     """Atari Go game engine"""
-    '''
+    
     def ___init___(self):
-        #constructor code
-    '''
+        f = open('board', 'r')
+        boardFile = self.load_board(f)
+        self.boardSize = boardFile[0]
+        self.nextPlayer = boardFile[1]
+        self.groups = self.get_groups(boardFile[2:])
+        self.state = []
+        self.state[0] = self.get_player_score(1)
+        self.state[1] = self.get_player_score(2)
+
     def to_move(self, s):
         # Returns the player to move next given the state s
         return s[1]
@@ -43,4 +50,12 @@ class Game:
         
         return state
 
-        
+    def get_player_score(self, player):
+        # Returns player's group of pieces with lowest degrees of freedom
+        # 1 -> player 1, 2 -> player 2
+        return 1
+
+    def get_groups(self, boardState):
+        return []
+
+    

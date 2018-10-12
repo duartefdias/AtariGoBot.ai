@@ -1,0 +1,7 @@
+# Funções a realizar em cada iteração
+
+(Se o algoritmo decidir assim)
+Actualizar o state.
+Procurar os grupos.
+Calcular os novos degrees of freedom.
+Calcular o utility.
