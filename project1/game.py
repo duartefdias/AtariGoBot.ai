@@ -1,6 +1,14 @@
+'''
+state = < n, p, x0, x1, ..., x(n-1) >
+
+n = board size (example: n=4 corresponds to a 4x4 board)
+p = next player to move (p=1 or p=2)
+
+'''
+
 class Game:
     """Atari Go game engine"""
-
+    '''
     def ___init___(self):
         #constructor code
     
@@ -18,7 +26,20 @@ class Game:
 
     def result(self, s, a):
         # Returns the sucessor game state after playing move a at state s
-
+    '''
     def load_board(self, s):
         # Loads a board from an opened file stream s and returns the corresponding state
+        rawState = s.readlines()
+
+        # Parse data
+        state = []
+        state.append(int(rawState[0][0]))
+        state.append(int(rawState[0][2]))
+
+        for i in range(1, state[0] + 1):
+            for j in range(0, state[0]):
+                state.append(int(rawState[i][j])) 
+        
+        return state
+
         
