@@ -11,10 +11,11 @@ class Game:
     '''
     def ___init___(self):
         #constructor code
-    
+    '''
     def to_move(self, s):
         # Returns the player to move next given the state s
-
+        return s[1]
+    '''
     def terminal_test(self, s):
         # Returns a boolean of whether the state s is terminal
 
