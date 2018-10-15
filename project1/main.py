@@ -1,25 +1,26 @@
-from .game import Game
-from .group import Group
+import game
+import group
 
 s = []
-endGame = 1
+endGame = 0
 playerMove = 0
 
 myGame = game.Game()
-myGame.load_board(myGame)
-print(myGame.state)
+s = myGame.load_board(open('board', 'r'))
+print(s)
 
 while not endGame:
 
     # Print board
-    for i in range(2, len(myGame.state)):
-        if myGame.state[i] == 0:
-            print(' _ ')
-        if myGame.state[i] % 2 == 1:
-            print(' X ')
-        if myGame.state[i] % 2 == 0:
-            print(' O ')
-        if i-1 % myGame.state[0] == 0:
+    print('\n')
+    for i in range(2, len(s)):
+        if s[i] == 0:
+            print(' _ ', end="")
+        if s[i] % 2 == 1 and s[i] != 0:
+            print(' X ', end="")
+        if s[i] % 2 == 0 and s[i] != 0:
+            print(' O ', end="")
+        if ((i-1) % s[0]) == 0:
             print('\n')
 
     # Player's turn
@@ -29,12 +30,14 @@ while not endGame:
             print(myGame.actions(s))
         else:
             for possibleAction in myGame.actions(s):
-                if playerInput == possibleAction:
+                if int(playerInput) == possibleAction:
                     playerMove = playerInput
+                    break
             if playerMove == 0:
                 print('Invalid move! Try again!')
 
-    newPiece = group.Group()
+    s = group.Group(myGame, s, 'something')
     playerMove = 0
 
     # AI's turn
+    # MAGIC AI code

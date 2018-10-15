@@ -27,7 +27,18 @@ class Game:
     
     def terminal_test(self, s):
         # Returns a boolean of whether the state s is terminal
-        return None
+
+        # Tests if game ends because DOF = 0 of either players
+        for group in self.groups:
+            if(group.dof == 0):
+                return True
+
+        # Tests if there are no more possible actions (draw)
+        if(self.actions(s) == []):
+            return True
+
+        # Not terminal
+        return False
 
     def utility(self, s, p):
         # Returns 1 if pwins, -1 if p looses, 0 in case of a draw
@@ -98,7 +109,10 @@ class Game:
 
     def result(self, s, a):
         # Returns the sucessor game state after playing move a at state s
-        return 1
+        # a is a integer corresponding to the newly occupied board position
+        newState = s
+        newState[a+1] = 1 # ToDo: what do we add here?
+        return newState
 
     def load_board(self, s):
         # Loads a board from an opened file stream s and returns the corresponding state
