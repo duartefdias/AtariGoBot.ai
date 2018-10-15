@@ -9,32 +9,97 @@ p = next player to move (p=1 or p=2)
 class Game:
     """Atari Go game engine"""
     
-    def ___init___(self):
+    def ___init___(self, s):
         f = open('board', 'r')
-        boardFile = self.load_board(f)
-        self.boardSize = boardFile[0]
-        self.nextPlayer = boardFile[1]
-        self.groups = self.get_groups(boardFile[2:])
-        self.state = []
-        self.state[0] = self.get_player_score(1)
-        self.state[1] = self.get_player_score(2)
+        s = self.load_board(f)
+        self.boardSize = s[0]
+        self.nextPlayer = s[1]
+        self.groups = self.get_groups(s[2:])
+
+        # List of available id's for player groups
+        # First row: player one's available group ids
+        # Second row: player two's available group ids
+        self.freeIds = [[]]
 
     def to_move(self, s):
         # Returns the player to move next given the state s
         return s[1]
-    '''
+    
     def terminal_test(self, s):
         # Returns a boolean of whether the state s is terminal
+        return None
 
     def utility(self, s, p):
-        # Returns 1 if pwins, -1 if p loses, 0 in case of a draw
+        # Returns 1 if pwins, -1 if p looses, 0 in case of a draw
+        # Else returns the score WRT a player
+
+        minDofPlayerOne, minDofPlayerTwo  = 10000, 10000
+        i, j = 0, 0
+
+        # Search in game for min DOF and sums DOFs of groups for both players
+        for group in self.groups:
+            if(group.player == 1):
+                if(group.dof < minDofPlayerOne):
+                    minDofPlayerOne = group.dof
+
+                    # Checking if game has ended at this point
+                    if(minDofPlayerOne == 0 & p == 0):
+                        return -1
+                    if(minDofPlayerOne == 0 & p == 1):
+                        return 1
+
+                sumOne += group.dof
+                i += 1 # counting the number of DOF's summed
+
+            if(group.player == 2):
+                if(group.dof < minDofPlayerTwo):
+                    minDofPlayerTwo = group.dof
+
+                    # Checking if game has ended at this point
+                    if(minDofPlayerTwo == 0 & p == 0):
+                        return 1
+                    if(minDofPlayerTwo == 0 & p == 1):
+                        return -1
+                    
+                sumTwo += group.dof  
+                j += 1 # counting the number of DOF's summed         
+     
+        # Getting the average DOF of both players
+        avgDofPlayerOne = sumOne/i
+        avgDofPlayerTwo = sumTwo/j
+            
+        # Applying heuristic to both players (weights TBD)
+        # IMPORTANT: MAKE SURE SCORE DOESNT EXCEED 1 ?HOW?
+        weightMinPlayerOne = 0.5
+        weightAvgPlayerOne = 0.5
+
+        weightMinPlayerTwo = 0.5
+        weightAvgPlayerTwo = 0.5
+
+        scorePlayerOne = weightMinPlayerOne*minDofPlayerOne + weightAvgPlayerOne*avgDofPlayerOne
+        scorePlayerTwo = weightMinPlayerTwo*minDofPlayerTwo + weightAvgPlayerTwo*avgDofPlayerTwo
+
+        # Determining the score WRT a player
+        score = scorePlayerOne-scorePlayerTwo
+        
+        if(p == 1):
+            return score
+        else:
+            return -score
+
 
     def actions(self, s):
         # Returns a list of valid moves at state s
+        possiblePlays = []
+        for i in range(2, len(s)):
+            if(s[i] == 0):
+                possiblePlays.append(i-1)
+        return possiblePlays
 
     def result(self, s, a):
         # Returns the sucessor game state after playing move a at state s
-    '''
+        return 1
+
     def load_board(self, s):
         # Loads a board from an opened file stream s and returns the corresponding state
         rawState = s.readlines()
@@ -55,7 +120,16 @@ class Game:
         # 1 -> player 1, 2 -> player 2
         return 1
 
-    def get_groups(self, boardState):
+    def get_groups(self, s):
         return []
 
-    
+    # Gets a position's content from the board
+    # Board example:
+    # 1 2 3
+    # 4 5 6
+    # 7 8 9
+    def get_board_space(self, s, spaceId):
+        return s[spaceId + 1]
+
+    def find_groups(self, s, newPiece):
+        return 1
