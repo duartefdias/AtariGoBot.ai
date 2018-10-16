@@ -11,9 +11,7 @@ import group
 class Game:
     """Atari Go game engine"""
     
-    def ___init___(self, s):
-        f = open('board', 'r')
-        s = self.load_board(f)
+    def __init__(self, s):
         self.boardSize = s[0]
         self.nextPlayer = s[1]
         self.groups = self.get_groups(s[2:])
@@ -21,7 +19,7 @@ class Game:
         # List of available id's for player groups
         # First row: player one's available group ids
         # Second row: player two's available group ids
-        self.freeIds = [[]]
+        self.freeIds = [[3], [4]]
 
     def to_move(self, s):
         # Returns the player to move next given the state s
@@ -104,11 +102,12 @@ class Game:
     def actions(self, s):
         # Returns a list of valid moves at state s
         possiblePlays = []
-        for i in range(2, len(s)):
-            if(s[i] == 0):
-                i = s[i] % self.boardSize
-                j = (s[i]-(i+1)) / self.boardSize
-                possiblePlays.append([i, j])
+        for i in range(0, len(s)-2):
+            # Check for free spaces in board
+            if(s[i+2] == 0):
+                row = int(i / self.boardSize)
+                column = i % self.boardSize
+                possiblePlays.append([row, column])
         return possiblePlays
 
     def result(self, s, a):
@@ -124,6 +123,7 @@ class Game:
             newState[1] = 1
         return newState
 
+    @classmethod
     def load_board(self, s):
         # Loads a board from an opened file stream s and returns the corresponding state
         rawState = s.readlines()
@@ -153,7 +153,7 @@ class Game:
     # 4 5 6
     # 7 8 9
     def get_board_space(self, s, spaceId):
-        return s[spaceId + 1]
+        return s[spaceId + 2]
 
     # Set a position's content in the board
     # Board example:
@@ -161,7 +161,7 @@ class Game:
     # 4 5 6
     # 7 8 9
     def set_board_space(self, s, spaceId, value):
-        s[spaceId + 1] = value
+        s[spaceId + 2] = value
         return s                
 
     def find_groups(self, s, newPiece):
