@@ -84,7 +84,7 @@ class Group:
         # Check if the space at the right of the piece exists
         if piece_column < game.boardSize:
             # Check if the space at the right of the piece is occupied
-            if game.get_board_space(piece + 1, state) != 0:
+            if game.get_board_space(state, piece + 1) != 0:
                 dof -= 1
         else:
             dof -= 1
@@ -92,7 +92,7 @@ class Group:
         # Check if the space at the left of the piece exists
         if piece_column > 0:
             # Check if the space at the left of the piece is occupied
-            if game.get_board_space(piece - 1, state) != 0:
+            if game.get_board_space(state, piece - 1) != 0:
                 dof -= 1
         else:
             dof -= 1
@@ -100,7 +100,7 @@ class Group:
         # Check if the space above the piece exists
         if piece_row > 0:
             # Check if the space above the piece is occupied
-            if game.get_board_space(piece - game.boardSize, state) != 0:
+            if game.get_board_space(state, piece - game.boardSize) != 0:
                 dof -= 1
         else:
             dof -= 1
@@ -108,7 +108,7 @@ class Group:
         # Check if the space bellow the piece exists
         if piece_row < game.boardSize:
             # Check if the space bellow the piece is occupied
-            if game.get_board_space(piece + game.boardSize, state) != 0:
+            if game.get_board_space(state, piece + game.boardSize) != 0:
                 dof -= 1
         else:
             dof -= 1

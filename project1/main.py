@@ -1,12 +1,12 @@
-import game
+from game import Game
 import group
 
 s = []
 endGame = 0
 playerMove = 0
 
-myGame = game.Game()
-s = myGame.load_board(open('board', 'r'))
+s = Game.load_board(open('board', 'r'))
+myGame = Game(s)
 print(s)
 
 while not endGame:
