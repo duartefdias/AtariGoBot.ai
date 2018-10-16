@@ -38,8 +38,8 @@ while not endGame:
             if playerMove == 0:
                 print('Invalid move! Try again!')
                 
-    playerMove.
-    s = myGame.result(myGame, s, [2, playerInputX, playerInputY])
+    playerMove.insert(0, 1) # Insert player id in beginning of list
+    s = myGame.result(s, playerMove)
     s = group.Group(myGame, s, 'something')
     playerMove = 0
 
