@@ -25,17 +25,21 @@ while not endGame:
 
     # Player's turn
     while playerMove == 0:
-        playerInput = input("It's your turn! (choose a tile number or 'x' to show possible plays):\n")
-        if playerInput == 'x' or playerInput == 'X':
+        playerInputX = input("It's your turn! (choose a tile number or 'x' to show possible plays)\nX: ")
+        if playerInputX == 'x' or playerInputX == 'X':
             print(myGame.actions(s))
         else:
+            playerInputY = input("Y: ")
+            playerInput = [int(playerInputX), int(playerInputY)]
             for possibleAction in myGame.actions(s):
-                if int(playerInput) == possibleAction:
+                if playerInput == possibleAction:
                     playerMove = playerInput
                     break
             if playerMove == 0:
                 print('Invalid move! Try again!')
-
+                
+    playerMove.
+    s = myGame.result(myGame, s, [2, playerInputX, playerInputY])
     s = group.Group(myGame, s, 'something')
     playerMove = 0
 

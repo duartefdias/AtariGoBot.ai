@@ -1,13 +1,13 @@
 class Group:
     def __init__(self, game, state, piece):
-        # Get the unique ID of the group
-        self.id = game.freeIds[game.nextPlayer]
-
         # Degrees of freedom
         self.dof = self.get_dof(game, state, piece)
 
-        # Add the ide
+        # Set the corresponding player
         self.player = game.nextPlayer
+
+        # Get the unique ID of the group
+        self.id = game.freeIds[game.nextPlayer]
 
         # Remove the newly assigned group ID from the list of available group IDs
         if len(game.freeIds[game.nextPlayer]) > 1:
@@ -37,16 +37,16 @@ class Group:
         dof = 0
 
         for i in range(1, game.boardSize):
-            if game.get_board_space(i) == small_group.id:
+            if game.get_board_space(state, i) == big_group.id:
+                # Add the piece's degrees of freedom to the group's value
+                dof += self.get_dof(game, state, i)
+
+            if game.get_board_space(state, i) == small_group.id:
                 # Change the small group's pieces IDs to the ID of the big group
-                game.get_board_space(i) = big_group.id
+                state = game.set_board_space(state, i, big_group.id)
 
                 # Add the piece's degrees of freedom to the group's value
-                dof += get_dof(self, game, state, i)
-
-            if game.get_board_space(i) == big_group.id:
-                # Add the piece's degrees of freedom to the group's value
-                dof += get_dof(self, game, state, i)
+                dof += self.get_dof(game, state, i)
 
         # Update the new group's degrees of freedom
         big_group.dof = dof
@@ -56,17 +56,20 @@ class Group:
             if g.id == small_group.id:
                 del g
 
+        # Add the deleted group's ID to the top of the list of the player's free IDs
+        game.freeIds[game.nextPlayer] = small_group.id + game.freeIds[game.nextPlayer]
+
         # Delete the old group
         del small_group
 
-        return big_group
+        return state
 
     # Get the total number of pieces in the group
     def get_number_pieces(self, game):
         num_pieces = 0
 
         for i in range(1, game.boardSize):
-            if game.get_board_space(i) == self.id:
+            if game.set_board_space(i) == self.id:
                 num_pieces += 1
 
         return num_pieces
@@ -111,3 +114,49 @@ class Group:
             dof -= 1
 
         return dof
+
+    def search_nearby_groups(self, state, game, piece):
+        piece_row = piece / game.boardSize
+        piece_column = piece % game.boardSize
+
+        # Check if the space at the right of the piece exists
+        if piece_column < game.boardSize:
+            # Check if the space at the right of the piece is occupied with an allied piece
+            if game.get_board_space(piece + game.boardSize, state) != 0 and \
+               game.get_board_space(piece + 1, state) % 2 == self.player % 2:
+                for group in game.groups:
+                    if group.id == game.get_board_space(piece + 1, state):
+                        # Join the groups
+                        self.join_group(group, game, state)
+
+        # Check if the space at the left of the piece exists
+        if piece_column > 0:
+            # Check if the space at the left of the piece is occupied with an allied piece
+            if game.get_board_space(piece + game.boardSize, state) != 0 and \
+               game.get_board_space(piece - 1, state) % 2 == self.player % 2:
+                for group in game.groups:
+                    if group.id == game.get_board_space(piece - 1, state):
+                        # Join the groups
+                        self.join_group(group, game, state)
+
+        # Check if the space above the piece exists
+        if piece_row > 0:
+            # Check if the space above the piece is occupied with an allied piece
+            if game.get_board_space(piece + game.boardSize, state) != 0 and \
+               game.get_board_space(piece - game.boardSize, state) % 2 == self.player % 2:
+                for group in game.groups:
+                    if group.id == game.get_board_space(piece - game.boardSize, state):
+                        # Join the groups
+                        self.join_group(group, game, state)
+
+        # Check if the space bellow the piece exists
+        if piece_row < game.boardSize:
+            # Check if the space bellow the piece is occupied with an allied piece
+            if game.get_board_space(piece + game.boardSize, state) != 0 and \
+               game.get_board_space(piece + game.boardSize, state) % 2 == self.player % 2:
+                for group in game.groups:
+                    if group.id == game.get_board_space(piece + game.boardSize, state):
+                        # Join the groups
+                        self.join_group(group, game, state)
+
+        return state

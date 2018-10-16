@@ -6,6 +6,8 @@ p = next player to move (p=1 or p=2)
 
 '''
 
+import group
+
 class Game:
     """Atari Go game engine"""
     
@@ -104,14 +106,22 @@ class Game:
         possiblePlays = []
         for i in range(2, len(s)):
             if(s[i] == 0):
-                possiblePlays.append(i-1)
+                i = s[i] % self.boardSize
+                j = (s[i]-(i+1)) / self.boardSize
+                possiblePlays.append([i, j])
         return possiblePlays
 
     def result(self, s, a):
         # Returns the sucessor game state after playing move a at state s
-        # a is a integer corresponding to the newly occupied board position
+        # a is tuple {p, i, j} where p={1,2} is the player, i=1...n is the row and j=1...n is the column
         newState = s
-        newState[a+1] = 1 # ToDo: what do we add here?
+        piecePos = a[1] + ((a[2]-1)*self.boardSize) #convert [i,j] into xs
+        newGroup = group.Group(self, s, piecePos)
+        newState = newGroup.search_nearby_groups(s, self, piecePos)
+        if newState[1] == 1:
+            newState[1] = 2
+        elif newState[1] == 2:
+            newState[1] = 1
         return newState
 
     def load_board(self, s):
@@ -144,6 +154,15 @@ class Game:
     # 7 8 9
     def get_board_space(self, s, spaceId):
         return s[spaceId + 1]
+
+    # Set a position's content in the board
+    # Board example:
+    # 1 2 3
+    # 4 5 6
+    # 7 8 9
+    def set_board_space(self, s, spaceId, value):
+        s[spaceId + 1] = value
+        return s                
 
     def find_groups(self, s, newPiece):
         return 1
