@@ -167,6 +167,6 @@ class Game:
     def find_groups(self, s, newPiece):
         return 1
 
-    def order_moves(self, s, a)
+    def order_moves(self, s, a):
         # Orders list of moves to place best in the beggining and speed up search
         return 1
