@@ -20,6 +20,11 @@ class Group:
         game.groups.append(self)
 
     def join_group(self, group, game, state):
+        # Confirm that the two groups to be joined are from the same player
+        if self.player != group.player:
+            print('ERROR: Can\'t join groups from different players.')
+            return None
+
         # See what's the biggest group, which should be kept
         if(self.get_number_pieces(game) > group.get_number_pieces(game)):
             big_group = self
@@ -28,7 +33,33 @@ class Group:
             big_group = group
             small_group = self
 
-        
+        # New group's degrees of freedom
+        dof = 0
+
+        for i in range(1, game.boardSize):
+            if game.get_board_space(i) == small_group.id:
+                # Change the small group's pieces IDs to the ID of the big group
+                game.get_board_space(i) = big_group.id
+
+                # Add the piece's degrees of freedom to the group's value
+                dof += get_dof(self, game, state, i)
+
+            if game.get_board_space(i) == big_group.id:
+                # Add the piece's degrees of freedom to the group's value
+                dof += get_dof(self, game, state, i)
+
+        # Update the new group's degrees of freedom
+        big_group.dof = dof
+
+        # Delete the old group
+        for g in game.groups:
+            if g.id == small_group.id:
+                del g
+
+        # Delete the old group
+        del small_group
+
+        return big_group
 
     # Get the total number of pieces in the group
     def get_number_pieces(self, game):
