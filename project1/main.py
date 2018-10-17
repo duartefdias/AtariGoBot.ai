@@ -40,7 +40,12 @@ while not endGame:
                 
     playerMove.insert(0, 1) # Insert player id in beginning of list
     s = myGame.result(s, playerMove)
-    s = group.Group(myGame, s, 'something')
+
+    # Convert coordinates to single number
+    piecePos = int(playerInputY) + ((int(playerInputX)-1)*myGame.boardSize)
+    print('Player input: ' + str(piecePos))
+    newPiece = group.Group(myGame, s, piecePos)
+    s = newPiece.search_nearby_groups(s, myGame, piecePos)
     playerMove = 0
 
     # AI's turn

@@ -7,11 +7,11 @@ class Group:
         self.player = game.nextPlayer
 
         # Get the unique ID of the group
-        self.id = game.freeIds[game.nextPlayer]
+        self.id = game.freeIds[game.nextPlayer-1]
 
         # Remove the newly assigned group ID from the list of available group IDs
-        if len(game.freeIds[game.nextPlayer]) > 1:
-            game.freeIds[game.nextPlayer] = game.freeIds[game.nextPlayer][1:]
+        if len(game.freeIds) > 1:
+            game.freeIds[game.nextPlayer-1] = game.freeIds[game.nextPlayer-1][1:]
         else:
             # If the new ID is the biggest one available, add the next possible ID
             game.freeIds[game.nextPlayer] = self.id + 2
