@@ -41,10 +41,12 @@ while not endGame:
     playerMove.insert(0, 1) # Insert player id in beginning of list
     s = myGame.result(s, playerMove)
 
-    # Convert coordinates to single number
-    piecePos = int(playerInputY) + ((int(playerInputX)-1)*myGame.boardSize)
+    # Convert coordinates to single number 
+    piecePos = ((int(playerInputX))*myGame.boardSize) +  int(playerInputY)
     print('Player input: ' + str(piecePos))
     newPiece = group.Group(myGame, s, piecePos)
+
+    # Search groups nearby the new piece
     s = newPiece.search_nearby_groups(s, myGame, piecePos)
     playerMove = 0
 
