@@ -4,17 +4,17 @@ class Group:
         self.dof = self.get_dof(game, state, piece)
 
         # Set the corresponding player
-        self.player = game.nextPlayer
+        self.player = state[1]
 
         # Get the unique ID of the group
-        self.id = game.freeIds[game.nextPlayer-1]
+        self.id = game.freeIds[state[1]-1]
 
         # Remove the newly assigned group ID from the list of available group IDs
         if len(game.freeIds) > 1:
-            game.freeIds[game.nextPlayer-1] = game.freeIds[game.nextPlayer-1][1:]
+            game.freeIds[state[1]-1] = game.freeIds[state[1]-1][1:]
         else:
             # If the new ID is the biggest one available, add the next possible ID
-            game.freeIds[game.nextPlayer] = self.id + 2
+            game.freeIds[state[1]] = self.id + 2
 
         # Add the new group to the game's list of groups
         game.groups.append(self)
@@ -26,7 +26,7 @@ class Group:
             return None
 
         # See what's the biggest group, which should be kept
-        if(self.get_number_pieces(game) > group.get_number_pieces(game)):
+        if(self.get_number_pieces(game, state) > group.get_number_pieces(game, state)):
             big_group = self
             small_group = group
         else:
@@ -57,7 +57,7 @@ class Group:
                 del g
 
         # Add the deleted group's ID to the top of the list of the player's free IDs
-        game.freeIds[game.nextPlayer] = small_group.id + game.freeIds[game.nextPlayer]
+        game.freeIds[state[1]] = small_group.id + game.freeIds[state[1]]
 
         # Delete the old group
         del small_group
@@ -65,7 +65,7 @@ class Group:
         return state
 
     # Get the total number of pieces in the group
-    def get_number_pieces(self, game):
+    def get_number_pieces(self, game, state):
         num_pieces = 0
 
         for i in range(1, game.boardSize):

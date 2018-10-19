@@ -13,7 +13,6 @@ class Game:
     
     def __init__(self, s):
         self.boardSize = s[0]
-        self.nextPlayer = s[1]
         self.groups = self.get_groups(s[2:])
 
         # List of available id's for player groups
@@ -106,13 +105,13 @@ class Game:
             # Check for free spaces in board
             if(s[i+2] == 0):
                 row = int(i / self.boardSize)
-                column = i % self.boardSize
+                column = (i % self.boardSize)
                 possiblePlays.append([row, column])
         return possiblePlays
 
     def result(self, s, a):
         # Returns the sucessor game state after playing move a at state s
-        # a is tuple {p, i, j} where p={1,2} is the player, i=1...n is the row and j=1...n is the column
+        # a is tuple {p, i, j} where p={1,2} is the player, i=0...n is the row and j=0...n is the column
         newState = s
         piecePos = a[1] + ((a[2]-1)*self.boardSize) #convert [i,j] into xs
         newGroup = group.Group(self, s, piecePos)

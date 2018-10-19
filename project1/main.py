@@ -9,6 +9,21 @@ s = Game.load_board(open('board', 'r'))
 myGame = Game(s)
 print(s)
 
+# Group pieces in initial board configuration
+for piecePos in range(0, len(s[2:])):
+    print(piecePos)
+    if s[piecePos + 2] != 0:
+        # Specify to which player the piece belongs to
+        s[1] = s[piecePos + 2]
+        # Create a group for new piece
+        newPiece = group.Group(myGame, s, piecePos) # THIS IS GIVING WRONG AND [] IDs! error is here!
+        s[piecePos + 2] = newPiece.id
+        # Join new group to other groups
+        s = newPiece.search_nearby_groups(s, myGame, piecePos)
+
+# Set next player to human
+s[1] = 1
+
 while not endGame:
 
     # Print board
@@ -45,10 +60,20 @@ while not endGame:
     piecePos = ((int(playerInputX))*myGame.boardSize) +  int(playerInputY)
     print('Player input: ' + str(piecePos))
     newPiece = group.Group(myGame, s, piecePos)
+    s[piecePos + 2] = newPiece.id
 
     # Search groups nearby the new piece
     s = newPiece.search_nearby_groups(s, myGame, piecePos)
     playerMove = 0
 
+    # End of human's turn
+    # Set next player to AI
+    s[1] = 2
+
     # AI's turn
     # MAGIC AI code
+
+
+    # End of AI's turn
+    # Set next player to human
+    s[1] = 1
