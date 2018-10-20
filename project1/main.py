@@ -3,28 +3,20 @@ import group
 
 s = []
 endGame = 0
-playerMove = 0
 
 s = Game.load_board(open('project1/boards/assignment_example.txt', 'r'))
 myGame = Game(s)
 print(s)
 
 # Group pieces in initial board configuration
-for piecePos in range(0, len(s[2:])):
-    print(piecePos)
-    if s[piecePos + 2] != 0:
-        # Specify to which player the piece belongs to
-        s[1] = s[piecePos + 2]
-        # Create a group for new piece
-        newPiece = group.Group(myGame, s, piecePos)
-        s[piecePos + 2] = newPiece.id
-        # Join new group to other groups
-        s = newPiece.search_nearby_groups(s, myGame, piecePos)
+s = myGame.get_groups(s)
 
 # Set next player to human
 s[1] = 1
 
 while not endGame:
+    # Set playerMove to 0, indicating that the player hasn't yet chosen a valid move
+    playerMove = 0
 
     # Print board
     print('\n')
@@ -35,14 +27,14 @@ while not endGame:
             print(' X ', end="")
         if s[i] % 2 == 0 and s[i] != 0:
             print(' O ', end="")
-        if ((i-1) % s[0]) == 0:
+        if ((i-1) % myGame.boardSize) == 0:
             print('\n')
 
     print(s)
 
     # Player's turn
     while playerMove == 0:
-        playerInputX = input("It's your turn! (choose a tile number or 'help' to show possible plays)\nX: ")
+        playerInputX = input("It's your turn! (choose a tile number or type 'help' to show possible plays)\nX: ")
         if playerInputX == 'help' or playerInputX == 'Help':
             print(myGame.actions(s))
         else:
@@ -58,9 +50,6 @@ while not endGame:
     playerMove.insert(0, 1) # Insert player id in beginning of list
     s = myGame.result(s, playerMove)
 
-    # Reset playerMove to 0
-    playerMove = 0
-
     # End of human's turn
     # Set next player to AI
     # s[1] = 2
@@ -71,4 +60,6 @@ while not endGame:
 
     # End of AI's turn
     # Set next player to human
-    # s[1] = 1
+    s[1] = 1
+
+    endGame = myGame.terminal_test(s)

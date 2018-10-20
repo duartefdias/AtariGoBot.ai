@@ -13,12 +13,14 @@ class Game:
     
     def __init__(self, s):
         self.boardSize = s[0]
-        self.groups = self.get_groups(s[2:])
 
         # List of available id's for player groups
         # First row: player one's available group ids
         # Second row: player two's available group ids
-        self.freeIds = [[3], [4]]       
+        self.freeIds = [[3], [4]]
+
+        # Initialize the groups list as empty
+        self.groups = []
 
     def to_move(self, s):
         # Returns the player to move next given the state s
@@ -29,7 +31,7 @@ class Game:
 
         # Tests if game ends because DOF = 0 of either players
         for group in self.groups:
-            if(group.dof == 0):
+            if group.dof == 0:
                 return True
 
         # Tests if there are no more possible actions (draw)
@@ -48,27 +50,27 @@ class Game:
 
         # Search in game for min DOF and sums DOFs of groups for both players
         for group in self.groups:
-            if(group.player == 1):
+            if group.player == 1:
                 if(group.dof < minDofPlayerOne):
                     minDofPlayerOne = group.dof
 
                     # Checking if game has ended at this point
-                    if(minDofPlayerOne == 0 & p == 0):
+                    if minDofPlayerOne == 0 & p == 0:
                         return -1
-                    if(minDofPlayerOne == 0 & p == 1):
+                    if minDofPlayerOne == 0 & p == 1:
                         return 1
 
                 sumOne += group.dof
                 i += 1 # counting the number of DOF's summed
 
-            if(group.player == 2):
-                if(group.dof < minDofPlayerTwo):
+            if group.player == 2:
+                if group.dof < minDofPlayerTwo:
                     minDofPlayerTwo = group.dof
 
                     # Checking if game has ended at this point
-                    if(minDofPlayerTwo == 0 & p == 0):
+                    if minDofPlayerTwo == 0 & p == 0:
                         return 1
-                    if(minDofPlayerTwo == 0 & p == 1):
+                    if minDofPlayerTwo == 0 & p == 1:
                         return -1
                     
                 sumTwo += group.dof  
@@ -92,7 +94,7 @@ class Game:
         # Determining the score WRT a player
         score = scorePlayerOne-scorePlayerTwo
         
-        if(p == 1):
+        if p == 1:
             return score
         else:
             return -score
@@ -103,7 +105,7 @@ class Game:
         possiblePlays = []
         for i in range(0, len(s)-2):
             # Check for free spaces in board
-            if(s[i+2] == 0):
+            if s[i+2] == 0:
                 row = int(i / self.boardSize)
                 column = (i % self.boardSize)
                 possiblePlays.append([row, column])
@@ -114,10 +116,16 @@ class Game:
         # a is tuple {p, i, j} where p={1,2} is the player, i=0...n is the row and j=0...n is the column
         newState = s
 
-        #convert [i,j] into xs
+        # Convert [row, column] into board index
         piecePos = a[1]*self.boardSize + a[2]
 
+        # Create a group for the new piece
         newGroup = group.Group(self, s, piecePos)
+
+        # Add the piece's group ID to the state representation
+        newState[piecePos + 2] = newGroup.id
+
+        # Search for possible nearby allied groups to join to
         newState = newGroup.search_nearby_groups(s, self, piecePos)
 
         # Update the next player to move
@@ -125,7 +133,7 @@ class Game:
             newState[1] = 2
         elif newState[1] == 2:
             newState[1] = 1
-            
+
         return newState
 
     @classmethod
@@ -150,7 +158,21 @@ class Game:
         return 1
 
     def get_groups(self, s):
-        return []
+        for piecePos in range(0, len(s[2:])):
+            if s[piecePos + 2] != 0:
+                # Specify to which player the piece belongs to
+                s[1] = s[piecePos + 2]
+
+                # Create a group for the new piece
+                newPiece = group.Group(self, s, piecePos)
+
+                # Add the piece's group ID to the state representation
+                s[piecePos + 2] = newPiece.id
+
+                # Search for possible nearby allied groups to join to
+                s = newPiece.search_nearby_groups(s, self, piecePos, board_init=True)
+
+        return s
 
     # Gets a position's content from the board
     # Board example:
