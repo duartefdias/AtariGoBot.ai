@@ -58,7 +58,7 @@ class Group:
                 del g
 
         # Add the deleted group's ID to the top of the list of the player's free IDs
-        game.freeIds[state[1]] = small_group.id + game.freeIds[state[1]]
+        game.freeIds[state[1]-1][0] = small_group.id + game.freeIds[state[1]-1][0]
 
         # Delete the old group
         del small_group

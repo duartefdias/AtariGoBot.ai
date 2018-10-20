@@ -16,7 +16,7 @@ for piecePos in range(0, len(s[2:])):
         # Specify to which player the piece belongs to
         s[1] = s[piecePos + 2]
         # Create a group for new piece
-        newPiece = group.Group(myGame, s, piecePos)# THIS IS GIVING WRONG AND [] IDs! error is here!
+        newPiece = group.Group(myGame, s, piecePos)
         # Podemos correr isto passo a passo no debug? SURE
         s[piecePos + 2] = newPiece.id
         # Join new group to other groups
