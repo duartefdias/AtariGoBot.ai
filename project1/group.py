@@ -78,7 +78,7 @@ class Group:
     def get_dof(self, game, state, piece):
         
         # Maximum possible degrees of freedom for a single piece        
-        piece.dof = 4
+        dof = 4
         piece_row = int(piece / game.boardSize)
         piece_column = int(piece % game.boardSize) 
 
@@ -134,9 +134,9 @@ class Group:
         if piece_column > 0: 
             # Check if the space at the left of the piece is occupied with an allied piece
             if game.get_board_space(state, piece + game.boardSize) != 0 and \
-               game.get_board_space(state, piece - 1 ) % == self.player % 2        
+               game.get_board_space(state, piece - 1 ) % 2 == (self.player % 2):        
                     for group in game.groups:
-                        if group.id == game.get_board_space(state, piece -1)                    
+                        if group.id == game.get_board_space(state, piece -1):                  
                             # Join the groups
                             self.join_group(group, game, state)
 
