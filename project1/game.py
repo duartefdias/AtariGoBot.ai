@@ -18,7 +18,7 @@ class Game:
         # List of available id's for player groups
         # First row: player one's available group ids
         # Second row: player two's available group ids
-        self.freeIds = [[3], [4]]
+        self.freeIds = [[3], [4]]       
 
     def to_move(self, s):
         # Returns the player to move next given the state s

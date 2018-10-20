@@ -6,16 +6,17 @@ class Group:
         # Set the corresponding player
         self.player = state[1]
 
-        # Get the unique ID of the group
-        self.id = game.freeIds[state[1]-1]
+        # Get the unique ID of the group 
+        self.id = game.freeIds[state[1]-1][0]
 
         # Remove the newly assigned group ID from the list of available group IDs
-        if len(game.freeIds) > 1:
+        if len(game.freeIds[state[1]-1]) > 1: 
             game.freeIds[state[1]-1] = game.freeIds[state[1]-1][1:]
         else:
             # If the new ID is the biggest one available, add the next possible ID
-            game.freeIds[state[1]] = self.id + 2
-
+            game.freeIds[state[1]-1][0] = self.id + 2
+        
+        
         # Add the new group to the game's list of groups
         game.groups.append(self)
 
@@ -76,10 +77,9 @@ class Group:
 
     def get_dof(self, game, state, piece):
         # Maximum possible degrees of freedom for a single piece
-        dof = 4
-
+        piece.dof = 4
         piece_row = piece / game.boardSize
-        piece_column = piece % game.boardSize
+        piece_column = int(piece % game.boardSize) 
 
         # Check if the space at the right of the piece exists
         if piece_column < game.boardSize:
@@ -123,27 +123,27 @@ class Group:
         if piece_column < game.boardSize:
             # Check if the space at the right of the piece is occupied with an allied piece
             if game.get_board_space(state, piece + game.boardSize) != 0 and \
-               game.get_board_space(state, piece + 1) % 2 == self.player % 2:
+               game.get_board_space(state, piece + 1) % 2 == (self.player % 2):
                 for group in game.groups:
                     if group.id == game.get_board_space(state, piece + 1):
                         # Join the groups
                         self.join_group(group, game, state)
 
         # Check if the space at the left of the piece exists
-        if piece_column > 0:
+        if piece_column > 0: 
             # Check if the space at the left of the piece is occupied with an allied piece
             if game.get_board_space(state, piece + game.boardSize) != 0 and \
-               game.get_board_space(state, piece - 1) % 2 == self.player % 2:
-                for group in game.groups:
-                    if group.id == game.get_board_space(state, piece - 1):
-                        # Join the groups
-                        self.join_group(group, game, state)
+               game.get_board_space(state,                     
+                    for # Join the groups
+                        self.join_group(group, game, state)                            te, piece - 1):
+                            # Join the groups
+                            self.join_group(group, game, state)
 
         # Check if the space above the piece exists
         if piece_row > 0:
             # Check if the space above the piece is occupied with an allied piece
             if game.get_board_space(state, piece + game.boardSize) != 0 and \
-               game.get_board_space(state, piece - game.boardSize) % 2 == self.player % 2:
+               game.get_board_space(state, piece - game.boardSize) % 2 == (self.player % 2):
                 for group in game.groups:
                     if group.id == game.get_board_space(state, piece - game.boardSize):
                         # Join the groups
