@@ -75,10 +75,11 @@ class Group:
 
         return num_pieces
 
+    def get_dof(self, game, state, piece):
+        
         # Maximum possible degrees of freedom for a single piece        
-        # Maximum possible degrees of freedom for a single piece
-          piece_row = int(piece / game.boardSize)
-        piece_row = piece / game.boardSize
+        piece.dof = 4
+        piece_row = int(piece / game.boardSize)
         piece_column = int(piece % game.boardSize) 
 
         # Check if the space at the right of the piece exists
