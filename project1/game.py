@@ -113,13 +113,19 @@ class Game:
         # Returns the sucessor game state after playing move a at state s
         # a is tuple {p, i, j} where p={1,2} is the player, i=0...n is the row and j=0...n is the column
         newState = s
-        piecePos = a[1] + ((a[2]-1)*self.boardSize) #convert [i,j] into xs
+
+        #convert [i,j] into xs
+        piecePos = a[1]*self.boardSize + a[2]
+
         newGroup = group.Group(self, s, piecePos)
         newState = newGroup.search_nearby_groups(s, self, piecePos)
+
+        # Update the next player to move
         if newState[1] == 1:
             newState[1] = 2
         elif newState[1] == 2:
             newState[1] = 1
+            
         return newState
 
     @classmethod

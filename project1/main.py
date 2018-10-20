@@ -5,7 +5,7 @@ s = []
 endGame = 0
 playerMove = 0
 
-s = Game.load_board(open('board', 'r'))
+s = Game.load_board(open('project1/boards/assignment_example.txt', 'r'))
 myGame = Game(s)
 print(s)
 
@@ -16,8 +16,7 @@ for piecePos in range(0, len(s[2:])):
         # Specify to which player the piece belongs to
         s[1] = s[piecePos + 2]
         # Create a group for new piece
-        newPiece = group.Group(myGame, s, piecePos)# THIS IS GIVING WRONG AND [] IDs! error is here!
-        # Podemos correr isto passo a passo no debug? SURE
+        newPiece = group.Group(myGame, s, piecePos)
         s[piecePos + 2] = newPiece.id
         # Join new group to other groups
         s = newPiece.search_nearby_groups(s, myGame, piecePos)
@@ -43,8 +42,8 @@ while not endGame:
 
     # Player's turn
     while playerMove == 0:
-        playerInputX = input("It's your turn! (choose a tile number or 'x' to show possible plays)\nX: ")
-        if playerInputX == 'x' or playerInputX == 'X':
+        playerInputX = input("It's your turn! (choose a tile number or 'help' to show possible plays)\nX: ")
+        if playerInputX == 'help' or playerInputX == 'Help':
             print(myGame.actions(s))
         else:
             playerInputY = input("Y: ")
@@ -59,19 +58,12 @@ while not endGame:
     playerMove.insert(0, 1) # Insert player id in beginning of list
     s = myGame.result(s, playerMove)
 
-    # Convert coordinates to single number 
-    piecePos = ((int(playerInputX))*myGame.boardSize) +  int(playerInputY)
-    print('Player input: ' + str(piecePos))
-    newPiece = group.Group(myGame, s, piecePos)
-    s[piecePos + 2] = newPiece.id
-
-    # Search groups nearby the new piece
-    s = newPiece.search_nearby_groups(s, myGame, piecePos)
+    # Reset playerMove to 0
     playerMove = 0
 
     # End of human's turn
     # Set next player to AI
-    s[1] = 2
+    # s[1] = 2
 
     # AI's turn
     # MAGIC AI code
@@ -79,4 +71,4 @@ while not endGame:
 
     # End of AI's turn
     # Set next player to human
-    s[1] = 1
+    # s[1] = 1
