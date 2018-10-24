@@ -23,7 +23,7 @@ while not endGame:
     for i in range(2, len(s)):
         if s[i] == 0:
             print(' _ ', end="")
-        if s[i] % 2 == 1 and s[i] != 0:
+        if s[i] % 2 == 1:
             print(' X ', end="")
         if s[i] % 2 == 0 and s[i] != 0:
             print(' O ', end="")
@@ -47,7 +47,9 @@ while not endGame:
             if playerMove == 0:
                 print('Invalid move! Try again!')
                 
-    playerMove.insert(0, 1) # Insert player id in beginning of list
+    # Insert player id in beginning of list
+    playerMove.insert(0, 1)
+
     s = myGame.result(s, playerMove)
 
     # End of human's turn
@@ -60,6 +62,6 @@ while not endGame:
 
     # End of AI's turn
     # Set next player to human
-    s[1] = 1
+    # s[1] = 1
 
     endGame = myGame.terminal_test(s)

@@ -42,7 +42,7 @@ class Game:
         return False
 
     def utility(self, s, p):
-        # Returns 1 if pwins, -1 if p looses, 0 in case of a draw
+        # Returns 1 if p wins, -1 if p looses, 0 in case of a draw
         # Else returns the score WRT a player
 
         minDofPlayerOne, minDofPlayerTwo  = 10000, 10000
@@ -57,7 +57,7 @@ class Game:
                     # Checking if game has ended at this point
                     if minDofPlayerOne == 0 & p == 0:
                         return -1
-                    if minDofPlayerOne == 0 & p == 1:
+                    elif minDofPlayerOne == 0 & p == 1:
                         return 1
 
                 sumOne += group.dof
@@ -70,7 +70,7 @@ class Game:
                     # Checking if game has ended at this point
                     if minDofPlayerTwo == 0 & p == 0:
                         return 1
-                    if minDofPlayerTwo == 0 & p == 1:
+                    elif minDofPlayerTwo == 0 & p == 1:
                         return -1
                     
                 sumTwo += group.dof  
@@ -88,8 +88,11 @@ class Game:
         weightMinPlayerTwo = 0.5
         weightAvgPlayerTwo = 0.5
 
-        scorePlayerOne = weightMinPlayerOne*minDofPlayerOne + weightAvgPlayerOne*avgDofPlayerOne
-        scorePlayerTwo = weightMinPlayerTwo*minDofPlayerTwo + weightAvgPlayerTwo*avgDofPlayerTwo
+        # TODO Test board_max_score(boardSize, weightMinPlayer, weightAvgPlayer) function
+        max_score = self.board_max_score(len(s[2:]))
+
+        scorePlayerOne = self.calc_solo_score(minDofPlayerOne, avgDofPlayerOne) / max_score
+        scorePlayerTwo = self.calc_solo_score(minDofPlayerTwo, avgDofPlayerTwo) / max_score
 
         # Determining the score WRT a player
         score = scorePlayerOne-scorePlayerTwo
@@ -197,3 +200,50 @@ class Game:
     def order_moves(self, s, a):
         # Orders list of moves to place best in the beggining and speed up search
         return 1
+
+    # Function that calculates the individual score of each player, without considering the opponent
+    @classmethod
+    def calc_solo_score(self, minDofPlayer, avgDofPlayer):
+        # (weights TBD)
+        weightMinPlayer = 0.5
+        weightAvgPlayer = 0.5
+
+        # Applying heuristic to one player
+        scorePlayer = weightMinPlayer * minDofPlayer + weightAvgPlayer * avgDofPlayer
+
+        return scorePlayer
+
+    # Function that gets the biggest possible score, considering the board size
+    def board_max_score(self, boardSize):
+        tmpBoardSize = boardSize
+        max_dof = 0
+        max_score = 0
+
+        while tmpBoardSize > 1:
+            squareSize = tmpBoardSize - 1
+
+            # If the first square was already analysed, we have to build a bridge to connect the squares
+            # in the same group. This bridge removes one degree of freedom.
+            if max_dof > 0:
+                max_dof -= 1
+
+            # Check if one can build a square of pieces inside the board, without the outer margin
+            if squareSize > 1:
+                # Add the spaces around the square of pieces
+                max_dof += 4 * squareSize
+
+                # Get the inner square size
+                innerSquareSize = squareSize - 1
+
+                # Check if the inside of the square has empty spaces
+                if innerSquareSize > 1:
+                    # Add the spaces inside the square of pieces
+                    max_dof += squareSize + 2 * (squareSize - 1) + squareSize - 2
+
+            # Go to the next square
+            tmpBoardSize -= 3
+
+        # Calculate the maximum possible score, considering that the opponent has score 0
+        max_score = self.calc_solo_score(max_dof, max_dof)
+
+        return max_score
