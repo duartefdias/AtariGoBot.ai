@@ -1,6 +1,6 @@
 from game import Game
 import group
-import alphabeta_cutoff_search
+from alphabeta_cutoff_search import alphabeta_cutoff_search
 
 s = []
 endGame = 0
@@ -40,17 +40,13 @@ while not endGame:
             print(myGame.actions(s))
         else:
             playerInputY = input("Y: ")
-            playerInput = [int(playerInputX), int(playerInputY)]
+            playerInput = [1, int(playerInputX), int(playerInputY)]
             for possibleAction in myGame.actions(s):
                 if playerInput == possibleAction:
                     playerMove = playerInput
                     break
             if playerMove == 0:
                 print('Invalid move! Try again!')
-                
-    # Insert player id in beginning of list
-    # playerMove.insert(0, 1)
-    # André: There's no need for this I think
     
     # s = myGame.result(s, playerMove)
 
@@ -62,7 +58,7 @@ while not endGame:
     # MAGIC AI code
     
     # Get the AI to decise what's the best move
-    AiMove = alphabeta_cutoff_search.alphabeta_cutoff_search(s, myGame, d=4)
+    AiMove = alphabeta_cutoff_search(s, myGame, d=4)
     s = myGame.result(s, AiMove)
 
     # [Debug] Code to debug the max score possible in the current board

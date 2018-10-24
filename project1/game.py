@@ -79,9 +79,9 @@ class Game:
                 j += 1 # counting the number of DOF's summed         
      
         # Getting the average DOF of both players
-        avgDofPlayerOne = sumOne / i
+        avgDofPlayerOne = sumOne / i # Há aqui alguma jogada em que os grupos estão todos mal, sobra só um do jogador 2 com DOF = -1. É na 4˚ action.
         avgDofPlayerTwo = sumTwo / j
-
+        
         # Get the maximum possible score for the current board size
         max_score = self.board_max_score(len(s[2:]))
 
@@ -96,7 +96,6 @@ class Game:
         else:
             return -score
 
-
     def actions(self, s):
         # Returns a list of valid moves at state s
         possiblePlays = []
@@ -105,7 +104,7 @@ class Game:
             if s[i+2] == 0:
                 row = int(i / self.boardSize)
                 column = (i % self.boardSize)
-                possiblePlays.append([row, column])
+                possiblePlays.append([s[1], row, column])
         return possiblePlays
 
     def result(self, s, a):
@@ -114,7 +113,7 @@ class Game:
         newState = s
 
         # Convert [row, column] into board index
-        piecePos = a[0]*self.boardSize + a[1]
+        piecePos = a[1]*self.boardSize + a[2]
 
         # Create a group for the new piece
         newGroup = group.Group(self, s, piecePos)
