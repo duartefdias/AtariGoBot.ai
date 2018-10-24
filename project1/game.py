@@ -47,6 +47,8 @@ class Game:
 
         minDofPlayerOne, minDofPlayerTwo  = 10000, 10000
         i, j = 0, 0
+        sumOne = 0
+        sumTwo = 0
 
         # Search in game for min DOF and sums DOFs of groups for both players
         for group in self.groups:
@@ -77,18 +79,10 @@ class Game:
                 j += 1 # counting the number of DOF's summed         
      
         # Getting the average DOF of both players
-        avgDofPlayerOne = sumOne/i
-        avgDofPlayerTwo = sumTwo/j
-            
-        # Applying heuristic to both players (weights TBD)
-        # IMPORTANT: MAKE SURE SCORE DOESNT EXCEED 1 ?HOW?
-        weightMinPlayerOne = 0.5
-        weightAvgPlayerOne = 0.5
+        avgDofPlayerOne = sumOne / i
+        avgDofPlayerTwo = sumTwo / j
 
-        weightMinPlayerTwo = 0.5
-        weightAvgPlayerTwo = 0.5
-
-        # TODO Test board_max_score(boardSize, weightMinPlayer, weightAvgPlayer) function
+        # Get the maximum possible score for the current board size
         max_score = self.board_max_score(len(s[2:]))
 
         scorePlayerOne = self.calc_solo_score(minDofPlayerOne, avgDofPlayerOne) / max_score
@@ -120,7 +114,7 @@ class Game:
         newState = s
 
         # Convert [row, column] into board index
-        piecePos = a[1]*self.boardSize + a[2]
+        piecePos = a[0]*self.boardSize + a[1]
 
         # Create a group for the new piece
         newGroup = group.Group(self, s, piecePos)
