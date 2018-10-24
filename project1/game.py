@@ -95,7 +95,7 @@ class Game:
         scorePlayerTwo = self.calc_solo_score(minDofPlayerTwo, avgDofPlayerTwo) / max_score
 
         # Determining the score WRT a player
-        score = scorePlayerOne-scorePlayerTwo
+        score = scorePlayerOne - scorePlayerTwo
         
         if p == 1:
             return score
@@ -214,34 +214,42 @@ class Game:
         return scorePlayer
 
     # Function that gets the biggest possible score, considering the board size
+    @classmethod
     def board_max_score(self, boardSize):
         tmpBoardSize = boardSize
         max_dof = 0
         max_score = 0
 
         while tmpBoardSize > 1:
-            squareSize = tmpBoardSize - 1
+            squareSize = tmpBoardSize - 2
 
             # If the first square was already analysed, we have to build a bridge to connect the squares
             # in the same group. This bridge removes one degree of freedom.
             if max_dof > 0:
                 max_dof -= 1
 
+            # Add a bridge if there's still a 2x2 empty block inside the smallest square
+            if tmpBoardSize == 2:
+                max_dof += 2
+
             # Check if one can build a square of pieces inside the board, without the outer margin
-            if squareSize > 1:
+            if squareSize >= 1:
                 # Add the spaces around the square of pieces
                 max_dof += 4 * squareSize
 
                 # Get the inner square size
-                innerSquareSize = squareSize - 1
+                innerSquareSize = squareSize - 2
 
                 # Check if the inside of the square has empty spaces
                 if innerSquareSize > 1:
                     # Add the spaces inside the square of pieces
-                    max_dof += squareSize + 2 * (squareSize - 1) + squareSize - 2
+                    max_dof += innerSquareSize + 2 * (innerSquareSize - 1) + innerSquareSize - 2
+                elif innerSquareSize == 1:
+                    # Add the space inside the square of pieces
+                    max_dof += 1
 
-            # Go to the next square
-            tmpBoardSize -= 3
+            # Go to the next square (3 rows bellow, subtract 3 * 2 in the board size)
+            tmpBoardSize -= 6
 
         # Calculate the maximum possible score, considering that the opponent has score 0
         max_score = self.calc_solo_score(max_dof, max_dof)

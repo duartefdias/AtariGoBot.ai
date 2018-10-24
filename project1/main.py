@@ -49,19 +49,23 @@ while not endGame:
                 
     # Insert player id in beginning of list
     playerMove.insert(0, 1)
-
-    s = myGame.result(s, playerMove)
+    
+    # s = myGame.result(s, playerMove)
 
     # End of human's turn
     # Set next player to AI
-    # s[1] = 2
+    s[1] = 2
 
     # AI's turn
     # MAGIC AI code
 
+    # [Debug] Code to debug the max score possible in the current board
+    # boardSize = int(input("Choose a board size: "))
+    # max_score = Game.board_max_score(boardSize)
+    # print("The maximum possible score for a board of size " + str(boardSize) + " is " + str(max_score))
 
     # End of AI's turn
     # Set next player to human
-    # s[1] = 1
+    s[1] = 1
 
     endGame = myGame.terminal_test(s)
