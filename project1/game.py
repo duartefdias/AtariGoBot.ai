@@ -7,6 +7,7 @@ p = next player to move (p=1 or p=2)
 '''
 
 import group
+import copy
 
 class Game:
     """Atari Go game engine"""
@@ -29,13 +30,16 @@ class Game:
     def terminal_test(self, s):
         # Returns a boolean of whether the state s is terminal
 
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + self.boardSize * self.boardSize
+
         # Tests if game ends because DOF = 0 of either players
-        for group in self.groups:
+        for group in s[game_pos_in_state].groups:
             if group.dof == 0:
                 return True
 
         # Tests if there are no more possible actions (draw)
-        if(self.actions(s) == []):
+        if(s[game_pos_in_state].actions(s) == []):
             return True
 
         # Not terminal
@@ -50,8 +54,11 @@ class Game:
         sumOne = 0
         sumTwo = 0
 
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + self.boardSize * self.boardSize
+
         # Search in game for min DOF and sums DOFs of groups for both players
-        for group in self.groups:
+        for group in s[game_pos_in_state].groups:
             if group.player == 1:
                 if(group.dof < minDofPlayerOne):
                     minDofPlayerOne = group.dof
@@ -79,11 +86,11 @@ class Game:
                 j += 1 # counting the number of DOF's summed         
      
         # Getting the average DOF of both players
-        avgDofPlayerOne = sumOne / i # Há aqui alguma jogada em que os grupos estão todos mal, sobra só um do jogador 2 com DOF = -1. É na 4˚ action.
+        avgDofPlayerOne = sumOne / i
         avgDofPlayerTwo = sumTwo / j
         
         # Get the maximum possible score for the current board size
-        max_score = self.board_max_score(len(s[2:]))
+        max_score = self.board_max_score(self.boardSize)
 
         scorePlayerOne = self.calc_solo_score(minDofPlayerOne, avgDofPlayerOne) / max_score
         scorePlayerTwo = self.calc_solo_score(minDofPlayerTwo, avgDofPlayerTwo) / max_score
@@ -99,7 +106,7 @@ class Game:
     def actions(self, s):
         # Returns a list of valid moves at state s
         possiblePlays = []
-        for i in range(0, len(s)-2):
+        for i in range(0, (self.boardSize * self.boardSize)-2):
             # Check for free spaces in board
             if s[i+2] == 0:
                 row = int(i / self.boardSize)
@@ -110,19 +117,24 @@ class Game:
     def result(self, s, a):
         # Returns the sucessor game state after playing move a at state s
         # a is tuple {p, i, j} where p={1,2} is the player, i=0...n is the row and j=0...n is the column
-        newState = s
+
+        # Create a copy of the state to prevent changing the original one
+        newState = copy.deepcopy(s)
+
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + self.boardSize * self.boardSize
 
         # Convert [row, column] into board index
         piecePos = a[1]*self.boardSize + a[2]
 
         # Create a group for the new piece
-        newGroup = group.Group(self, s, piecePos)
+        newGroup = group.Group(newState[game_pos_in_state], newState, piecePos)
 
         # Add the piece's group ID to the state representation
         newState[piecePos + 2] = newGroup.id
 
         # Search for possible nearby allied groups to join to
-        newState = newGroup.search_nearby_groups(s, self, piecePos)
+        newState = newGroup.search_nearby_groups(newState, newState[game_pos_in_state], piecePos)
 
         # Update the next player to move
         if newState[1] == 1:
@@ -154,7 +166,7 @@ class Game:
         return 1
 
     def get_groups(self, s):
-        for piecePos in range(0, len(s[2:])):
+        for piecePos in range(0, self.boardSize * self.boardSize):
             if s[piecePos + 2] != 0:
                 # Specify to which player the piece belongs to
                 s[1] = s[piecePos + 2]

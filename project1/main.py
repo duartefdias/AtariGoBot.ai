@@ -7,6 +7,10 @@ endGame = 0
 
 s = Game.load_board(open('project1/boards/assignment_example.txt', 'r'))
 myGame = Game(s)
+
+# Append the Game object to the state representation, allowing copies of the groups inside the AI's simulations
+s.append(myGame)
+
 print(s)
 
 # Group pieces in initial board configuration
@@ -21,7 +25,7 @@ while not endGame:
 
     # Print board
     print('\n')
-    for i in range(2, len(s)):
+    for i in range(2, len(s)-1):
         if s[i] == 0:
             print(' _ ', end="")
         if s[i] % 2 == 1:
@@ -48,7 +52,21 @@ while not endGame:
             if playerMove == 0:
                 print('Invalid move! Try again!')
     
-    # s = myGame.result(s, playerMove)
+    s = myGame.result(s, playerMove)
+
+    # Print board
+    print('\n')
+    for i in range(2, len(s)-1):
+        if s[i] == 0:
+            print(' _ ', end="")
+        if s[i] % 2 == 1:
+            print(' X ', end="")
+        if s[i] % 2 == 0 and s[i] != 0:
+            print(' O ', end="")
+        if ((i-1) % myGame.boardSize) == 0:
+            print('\n')
+
+    print(s)
 
     # End of human's turn
     # Set next player to AI

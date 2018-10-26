@@ -22,6 +22,23 @@ def alphabeta_cutoff_search(state, game, d=4, cutoff_test=None, eval_fn=None):
             return eval_fn(state)
         v = -infinity
         for a in game.actions(state):
+
+            ############# Debug #####################################
+            # Print board
+            # print('\n')
+            # for i in range(2, len(state)-1):
+            #     if state[i] == 0:
+            #         print(' _ ', end="")
+            #     if state[i] % 2 == 1:
+            #         print(' X ', end="")
+            #     if state[i] % 2 == 0 and state[i] != 0:
+            #         print(' O ', end="")
+            #     if ((i-1) % game.boardSize) == 0:
+            #         print('\n')
+
+            # print(state)
+            #########################################################
+
             v = max(v, min_value(game.result(state, a),
                                  alpha, beta, depth + 1))
             if v >= beta:
@@ -34,6 +51,23 @@ def alphabeta_cutoff_search(state, game, d=4, cutoff_test=None, eval_fn=None):
             return eval_fn(state)
         v = infinity
         for a in game.actions(state):
+
+            ############# Debug #####################################
+            # Print board
+            # print('\n')
+            # for i in range(2, len(state)-1):
+            #     if state[i] == 0:
+            #         print(' _ ', end="")
+            #     if state[i] % 2 == 1:
+            #         print(' X ', end="")
+            #     if state[i] % 2 == 0 and state[i] != 0:
+            #         print(' O ', end="")
+            #     if ((i-1) % game.boardSize) == 0:
+            #         print('\n')
+
+            # print(state)
+            #########################################################
+
             v = min(v, max_value(game.result(state, a),
                                  alpha, beta, depth + 1))
             if v <= alpha:
@@ -51,6 +85,23 @@ def alphabeta_cutoff_search(state, game, d=4, cutoff_test=None, eval_fn=None):
     beta = infinity
     best_action = None
     for a in game.actions(state):
+
+        ############# Debug #####################################
+        # Print board
+        # print('\n')
+        # for i in range(2, len(state)-1):
+        #     if state[i] == 0:
+        #         print(' _ ', end="")
+        #     if state[i] % 2 == 1:
+        #         print(' X ', end="")
+        #     if state[i] % 2 == 0 and state[i] != 0:
+        #         print(' O ', end="")
+        #     if ((i-1) % game.boardSize) == 0:
+        #         print('\n')
+
+        # print(state)
+        #########################################################
+
         v = min_value(game.result(state, a), best_score, beta, 1)
         if v > best_score:
             best_score = v

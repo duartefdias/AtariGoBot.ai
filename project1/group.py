@@ -34,7 +34,7 @@ class Group:
             big_group = group
             small_group = self
 
-        for i in range(0, len(state[2:])):
+        for i in range(0, game.boardSize * game.boardSize):
             if game.get_board_space(state, i) == small_group.id:
                 # Change the small group's pieces IDs to the ID of the big group
                 state = game.set_board_space(state, i, big_group.id)
@@ -114,7 +114,7 @@ class Group:
         # Set of empty spaces adjacent to the group; Using a set to avoid duplicates
         adjacentEmptySpaces = set([])
 
-        for i in range(0, len(state[2:])):
+        for i in range(0, game.boardSize * game.boardSize):
             if game.get_board_space(state, i) == self.id:
                 piece_row = int(i / game.boardSize)
                 piece_column = i % game.boardSize
