@@ -103,15 +103,43 @@ class Game:
             return -score
 
     def actions(self, s):
-        # Returns a list of valid moves at state s
-        possiblePlays = []
-        for i in range(0, self.boardSize * self.boardSize):
-            # Check for free spaces in board
-            if s[i+2] == 0:
-                row = int(i / self.boardSize) + 1
-                column = (i % self.boardSize) + 1
-                possiblePlays.append([s[1], row, column])
-        return possiblePlays
+            # Returns a list of valid moves at state s
+            possiblePlays = []
+    
+            # The position of the game variable in the state
+            game_pos_in_state = 2 + self.boardSize * self.boardSize
+    
+            for i in range(0, self.boardSize * self.boardSize):
+                piece_row = int(i / self.boardSize) + 1
+                piece_column = i % self.boardSize + 1
+    
+                # Flag to check if a move is suicidal
+                isSuicidal = False
+    
+                # Check for free spaces in board
+                if s[i+2] == 0:
+                    # Check if the neighborhood is all occupied:
+                    # Check if the space at the right is the wall or is occupied by another piece
+                    if piece_column == self.boardSize or s[game_pos_in_state].get_board_space(s, i + 1) != 0:
+                        # Check if the space at the left is the wall or is occupied by another piece
+                        if piece_column == 1 or s[game_pos_in_state].get_board_space(s, i - 1) != 0:
+                            # Check if the space bellow is the wall or is occupied by another piece
+                            if piece_row == self.boardSize or s[game_pos_in_state].get_board_space(s, i + self.boardSize) != 0:
+                                # Check if the space above is the wall or is occupied by another piece
+                                if piece_row == 1 or s[game_pos_in_state].get_board_space(s, i - self.boardSize) != 0:
+                                    #ToDo: Simulate next play and check if it is suicide
+                                    #ToDo: If it is suicide don't allow player to do it
+                                    simState = s[game_pos_in_state].result(s, (s[1], piece_row, piece_column))
+                                
+                                    for group in simState[game_pos_in_state].groups:
+                                        # Search for the group of the new piece
+                                        if group.id == simState[game_pos_in_state].get_board_space(simState, i):
+                                            if group.dof == 0:
+                                                isSuicidal = True                                            
+    
+                    if not isSuicidal:
+                        possiblePlays.append((s[1], piece_row, piece_column))
+            return possiblePlays
 
     def result(self, s, a):
         # Returns the sucessor game state after playing move a at state s
