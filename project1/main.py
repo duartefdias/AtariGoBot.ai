@@ -39,12 +39,20 @@ while not endGame:
 
     # Player's turn
     while playerMove == 0:
+        playerInputY = 'x'
         playerInputX = input("It's your turn! (choose a tile number or type 'help' to show possible plays)\nX: ")
         if playerInputX == 'help' or playerInputX == 'Help':
             print(myGame.actions(s))
+        elif not playerInputX.isdigit():
+            playerMove = 0
         else:
-            playerInputY = input("Y: ")
+            while not playerInputY.isdigit():
+                playerInputY = input("Y: ")
             playerInput = [1, int(playerInputX), int(playerInputY)]
+            if playerInput[1] >= 0 and playerInput[1] < myGame.boardSize:
+                break
+            if playerInput[2] >= 0 and playerInput[2] < myGame.boardSize:
+                break
             for possibleAction in myGame.actions(s):
                 if playerInput == possibleAction:
                     playerMove = playerInput
@@ -76,7 +84,7 @@ while not endGame:
     # MAGIC AI code
     
     # Get the AI to decise what's the best move
-    AiMove = alphabeta_cutoff_search(s, myGame, d=4)
+    AiMove = alphabeta_cutoff_search(s, myGame, d=10)
     s = myGame.result(s, AiMove)
 
     # [Debug] Code to debug the max score possible in the current board
