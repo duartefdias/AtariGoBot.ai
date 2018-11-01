@@ -2,7 +2,7 @@
 state = < n, p, x0, x1, ..., x(n-1) >
 
 n = board size (example: n=4 corresponds to a 4x4 board)
-p = next player to move (p=1 or p=2)
+p = next player to move (p=1 or p=2).
 
 '''
 
