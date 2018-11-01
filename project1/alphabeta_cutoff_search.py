@@ -10,7 +10,7 @@ infinity = float('inf')
 GameState = namedtuple('GameState', 'to_move, utility, board, moves')
 StochasticGameState = namedtuple('StochasticGameState', 'to_move, utility, board, moves, chance')
 
-def alphabeta_cutoff_search(state, game, d=4, cutoff_test=None, eval_fn=None):
+def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
     """Search game to determine best action; use alpha-beta pruning.
     This version cuts off search and uses an evaluation function."""
 

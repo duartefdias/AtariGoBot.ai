@@ -76,6 +76,11 @@ while not endGame:
 
     print(s)
 
+    endGame = myGame.terminal_test(s)
+    
+    if endGame:
+        break
+
     # End of human's turn
     # Set next player to AI
     s[1] = 2
@@ -97,3 +102,17 @@ while not endGame:
     s[1] = 1
 
     endGame = myGame.terminal_test(s)
+
+# Print the final board
+print('\n')
+for i in range(2, len(s)-1):
+    if s[i] == 0:
+        print(' _ ', end="")
+    if s[i] % 2 == 1:
+        print(' X ', end="")
+    if s[i] % 2 == 0 and s[i] != 0:
+        print(' O ', end="")
+    if ((i-1) % myGame.boardSize) == 0:
+        print('\n')
+
+print(s)
