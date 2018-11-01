@@ -64,9 +64,9 @@ class Game:
                     minDofPlayerOne = group.dof
 
                     # Checking if game has ended at this point
-                    if minDofPlayerOne == 0 & p == 0:
+                    if minDofPlayerOne == 0 & p == 1:
                         return -1
-                    elif minDofPlayerOne == 0 & p == 1:
+                    elif minDofPlayerOne == 0 & p == 2:
                         return 1
 
                 sumOne += group.dof
@@ -77,9 +77,9 @@ class Game:
                     minDofPlayerTwo = group.dof
 
                     # Checking if game has ended at this point
-                    if minDofPlayerTwo == 0 & p == 0:
+                    if minDofPlayerTwo == 0 & p == 1:
                         return 1
-                    elif minDofPlayerTwo == 0 & p == 1:
+                    elif minDofPlayerTwo == 0 & p == 2:
                         return -1
                     
                 sumTwo += group.dof  
@@ -106,7 +106,7 @@ class Game:
     def actions(self, s):
         # Returns a list of valid moves at state s
         possiblePlays = []
-        for i in range(0, (self.boardSize * self.boardSize)-2):
+        for i in range(0, self.boardSize * self.boardSize):
             # Check for free spaces in board
             if s[i+2] == 0:
                 row = int(i / self.boardSize)
@@ -210,8 +210,8 @@ class Game:
     @classmethod
     def calc_solo_score(self, minDofPlayer, avgDofPlayer):
         # (weights TBD)
-        weightMinPlayer = 0.5
-        weightAvgPlayer = 0.5
+        weightMinPlayer = 0.8
+        weightAvgPlayer = 0.2
 
         # Applying heuristic to one player
         scorePlayer = weightMinPlayer * minDofPlayer + weightAvgPlayer * avgDofPlayer
