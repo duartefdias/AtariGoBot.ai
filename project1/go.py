@@ -56,6 +56,18 @@ class Game:
         # The position of the game variable in the state
         game_pos_in_state = 2 + self.boardSize * self.boardSize
 
+        # Consider the state in case of being the other player playing
+        otherPlayerState = s
+
+        if s[1] == 1:
+            otherPlayerState[1] = 2
+        else:
+            otherPlayerState[1] = 1
+
+        # Tests if there are no more possible actions (draw)
+        if s[game_pos_in_state].actions(s) == [] and otherPlayerState[game_pos_in_state].actions(otherPlayerState) == []:
+            return True
+
         # Search in game for min DOF and sums DOFs of groups for both players
         for group in s[game_pos_in_state].groups:
             if group.player == 1:
