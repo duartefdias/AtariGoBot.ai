@@ -36,7 +36,7 @@ while not endGame:
         else:
             while not playerInputY.isdigit():
                 playerInputY = input("Y: ")
-            playerInput = [1, int(playerInputX), int(playerInputY)]
+            playerInput = (1, int(playerInputX), int(playerInputY))
             for possibleAction in myGame.actions(s):
                 if playerInput == possibleAction:
                     playerMove = playerInput
