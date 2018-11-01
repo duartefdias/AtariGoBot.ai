@@ -66,7 +66,7 @@ class Game:
 
         # Tests if there are no more possible actions (draw)
         if s[game_pos_in_state].actions(s) == [] and otherPlayerState[game_pos_in_state].actions(otherPlayerState) == []:
-            return True
+            return 0
 
         # Search in game for min DOF and sums DOFs of groups for both players
         for group in s[game_pos_in_state].groups:
