@@ -4,19 +4,8 @@ from alphabeta_cutoff_search import alphabeta_cutoff_search
 s = []
 endGame = 0
 
-s = go.Game.load_board(open('project1/boards/assignment_example.txt', 'r'))
-myGame = go.Game(s)
-
-# Append the Game object to the state representation, allowing copies of the groups inside the AI's simulations
-s.append(myGame)
-
-print(s)
-
-# Group pieces in initial board configuration
-s = myGame.get_groups(s)
-
-# Set next player to human
-s[1] = 1
+myGame = go.Game()
+s = myGame.load_board(open('boards/assignment_example.txt', 'r'))
 
 while not endGame:
     # Set playerMove to 0, indicating that the player hasn't yet chosen a valid move
