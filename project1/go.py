@@ -158,7 +158,16 @@ class Game:
                 state.append(int(rawState[i][j])) 
 
         self.boardSize = state[0]
-        
+
+        # Append the Game object to the state representation, allowing copies of the groups inside the AI's simulations
+        state.append(self)
+
+        # Group pieces in initial board configuration
+        state = self.get_groups(state)
+
+        print("DUARTE: ")
+        print(state)
+
         return state
 
     def get_player_score(self, player):
