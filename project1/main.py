@@ -1,12 +1,11 @@
-from game import Game
-import group
+import go
 from alphabeta_cutoff_search import alphabeta_cutoff_search
 
 s = []
 endGame = 0
 
-s = Game.load_board(open('project1/boards/assignment_example.txt', 'r'))
-myGame = Game(s)
+s = go.Game.load_board(open('project1/boards/assignment_example.txt', 'r'))
+myGame = go.Game(s)
 
 # Append the Game object to the state representation, allowing copies of the groups inside the AI's simulations
 s.append(myGame)
