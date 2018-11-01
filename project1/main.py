@@ -49,10 +49,6 @@ while not endGame:
             while not playerInputY.isdigit():
                 playerInputY = input("Y: ")
             playerInput = [1, int(playerInputX), int(playerInputY)]
-            if playerInput[1] >= 0 and playerInput[1] < myGame.boardSize:
-                break
-            if playerInput[2] >= 0 and playerInput[2] < myGame.boardSize:
-                break
             for possibleAction in myGame.actions(s):
                 if playerInput == possibleAction:
                     playerMove = playerInput
