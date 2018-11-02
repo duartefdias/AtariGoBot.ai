@@ -1,5 +1,5 @@
 '''
-state = < n, p, x0, x1, ..., x(n-1) >
+state = < n, p, x0, x1, ..., x(n-1), game >
 
 n = board size (example: n=4 corresponds to a 4x4 board)
 p = next player to move (p=1 or p=2).
@@ -7,6 +7,7 @@ p = next player to move (p=1 or p=2).
 '''
 
 import copy
+from operator import itemgetter
 
 class Game:
     """Atari Go game engine"""
@@ -21,6 +22,9 @@ class Game:
 
         # Initialize the groups list as empty
         self.groups = []
+
+        # Declare the variable corresponding to the real state of the game (not the same as in the AI's simulations)
+        self.state = []
 
     def to_move(self, s):
         # Returns the player to move next given the state s TENHO FOME
@@ -115,48 +119,17 @@ class Game:
             return -score
 
     def actions(self, s):
-            # Returns a list of valid moves at state s
-            possiblePlays = []
-    
-            # The position of the game variable in the state
-            game_pos_in_state = 2 + self.boardSize * self.boardSize
-    
-            for i in range(0, self.boardSize * self.boardSize):
-                piece_row = int(i / self.boardSize) + 1
-                piece_column = i % self.boardSize + 1
-    
-                # Flag to check if a move is suicidal
-                isSuicidal = False
-    
-                # Check for free spaces in board
-                if s[i+2] == 0:
-                    # Check if the neighborhood is all occupied:
-                    # Check if the space at the right is the wall or is occupied by another piece
-                    if piece_column == self.boardSize or s[game_pos_in_state].get_board_space(s, i + 1) != 0:
-                        # Check if the space at the left is the wall or is occupied by another piece
-                        if piece_column == 1 or s[game_pos_in_state].get_board_space(s, i - 1) != 0:
-                            # Check if the space bellow is the wall or is occupied by another piece
-                            if piece_row == self.boardSize or s[game_pos_in_state].get_board_space(s, i + self.boardSize) != 0:
-                                # Check if the space above is the wall or is occupied by another piece
-                                if piece_row == 1 or s[game_pos_in_state].get_board_space(s, i - self.boardSize) != 0:
-                                    #ToDo: Simulate next play and check if it is suicide
-                                    #ToDo: If it is suicide don't allow player to do it
-                                    simState = s[game_pos_in_state].result(s, (s[1], piece_row, piece_column))
-                                
-                                    for group in simState[game_pos_in_state].groups:
-                                        # Search for the group of the new piece
-                                        if group.id == simState[game_pos_in_state].get_board_space(simState, i):
-                                            if group.dof == 0:
-                                                isSuicidal = True                                            
-    
-                    if not isSuicidal:
-                        possiblePlays.append((s[1], piece_row, piece_column))
-            return possiblePlays
+            # Check if the state corresponds to the real one or to a simulation
+            if s == self.state:
+                # Sort the actions by the utility given in the first move
+                return self.sort_actions(s)
+            else:
+                # Just remove the suicidal moves
+                return self.remove_suicides(s)
 
+    # Returns the sucessor game state after playing move a at state s
+    # a is tuple (p, i, j) where p={1, 2} is the player, i=1...n is the row and j=1...n is the column
     def result(self, s, a):
-        # Returns the sucessor game state after playing move a at state s
-        # a is tuple {p, i, j} where p={1,2} is the player, i=0...n is the row and j=0...n is the column
-
         # Create a copy of the state to prevent changing the original one
         newState = copy.deepcopy(s)
 
@@ -185,7 +158,6 @@ class Game:
 
         return newState
 
-    #@classmethod
     def load_board(self, s):
         # Loads a board from an opened file stream s and returns the corresponding state
         rawState = s.readlines()
@@ -206,6 +178,9 @@ class Game:
 
         # Group pieces in initial board configuration
         state = self.get_groups(state)
+
+        # Save the real board's state in the game object (to distinguish from the AI's simulated states)
+        self.state = state
 
         return state
 
@@ -229,8 +204,6 @@ class Game:
                 # Search for possible nearby allied groups to join to
                 s = newPiece.search_nearby_groups(s, self, piecePos, player, board_init=True)
 
-                print(s)
-
         return s
 
     # Gets a position's content from the board
@@ -248,14 +221,124 @@ class Game:
     # 7 8 9
     def set_board_space(self, s, spaceId, value):
         s[spaceId + 2] = value
-        return s                
+        return s
 
-    def find_groups(self, s, newPiece):
-        return 1
+    def remove_suicides(self, s, sort=False):
+        if sort:
+            # Returns a list of suicidal moves at state s
+            suicidalPlays = []
+        else:
+            # Returns a list of valid moves at state s
+            possiblePlays = []
 
-    def order_moves(self, s, a):
-        # Orders list of moves to place best in the beggining and speed up search
-        return 1
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + self.boardSize * self.boardSize
+
+        # Go through each space of the board
+        for i in range(0, self.boardSize * self.boardSize):
+            row = int(i / self.boardSize) + 1
+            column = i % self.boardSize + 1
+
+            # Flag to check if a move is suicidal
+            isSuicidal = False
+
+            # Check for free spaces in board
+            if s[i+2] == 0:
+                # Check if the neighborhood is all occupied:
+                # Check if the space at the right is the wall or is occupied by another piece
+                if column == self.boardSize or s[game_pos_in_state].get_board_space(s, i + 1) != 0:
+                    # Check if the space at the left is the wall or is occupied by another piece
+                    if column == 1 or s[game_pos_in_state].get_board_space(s, i - 1) != 0:
+                        # Check if the space bellow is the wall or is occupied by another piece
+                        if row == self.boardSize or s[game_pos_in_state].get_board_space(s, i + self.boardSize) != 0:
+                            # Check if the space above is the wall or is occupied by another piece
+                            if row == 1 or s[game_pos_in_state].get_board_space(s, i - self.boardSize) != 0:
+                                # Simulate the current action
+                                simState = s[game_pos_in_state].result(s, (s[1], row, column))
+                            
+                                for group in simState[game_pos_in_state].groups:
+                                    # Search for the group of the new piece
+                                    if group.id == simState[game_pos_in_state].get_board_space(simState, i):
+                                        if group.dof == 0:
+                                            isSuicidal = True
+
+                                            # If the actions are being sorted, return the suicidal moves
+                                            if sort:
+                                                suicidalPlays.append((s[1], row, column))
+                                                
+                # If the the actions are not being sorted, like in a simulation, return the possible moves
+                if not isSuicidal and not sort:
+                    possiblePlays.append((s[1], row, column))
+
+        if sort:
+            # Returns a list of suicidal moves at state s
+            return suicidalPlays
+        else:
+            # Returns a list of valid moves at state s
+            return possiblePlays
+
+    # Sorts list of moves to place best in the beggining and speed up search
+    def sort_actions(self, s):
+        # List of tuples with the actions to be sorted and their corresponding utility
+        # (0.999999 if the opponent could win in his or her next move)
+        sortedActions = []
+
+        player = s[1]
+
+        if player == 1:
+            opponent = 2
+        else:
+            opponent = 1
+
+        # Find the moves that would cause the current player to lose
+        suicidalPlays = self.remove_suicides(s, sort=True)
+
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + self.boardSize * self.boardSize
+
+        # Go through each space of the board
+        for i in range(0, self.boardSize * self.boardSize):
+            row = int(i / self.boardSize) + 1
+            column = i % self.boardSize + 1
+
+            # Check for free spaces in board
+            if s[i+2] == 0:
+                action = (player, row, column)
+
+                if action == suicidalPlays[0]:
+                    # Remove the suicidal action from the list of suicidal actions
+                    suicidalPlays = suicidalPlays[1:]
+
+                    # Skip this action
+                    continue
+
+                # Simulate the current action
+                simState = copy.deepcopy(s)
+                simState = simState[game_pos_in_state].result(simState, action)
+
+                # Simulate the current action if it was the opponent playing in that space
+                simStateOpponent = copy.deepcopy(s)
+                simStateOpponent[1] = opponent
+                opponentAction = (opponent, row, column)
+                simStateOpponent = simStateOpponent[game_pos_in_state].result(simStateOpponent, opponentAction)
+
+                # If the opponent could win imediatly, add a big score to occupying that space
+                if simStateOpponent[game_pos_in_state].utility(simStateOpponent, opponent) == 1:
+                    utilityCurrentPlay = 0.999999
+                else:
+                    utilityCurrentPlay = simState[game_pos_in_state].utility(simState, player)
+
+                # Add the (action, utility) tuple to the list of actions
+                actionUtilityTuple = (action, utilityCurrentPlay)
+                sortedActions.append(actionUtilityTuple)
+            
+        # Sort the action tuples in descending order by the utility score
+        sortedActions = sorted(sortedActions, key=itemgetter(1), reverse=True)
+
+        # Get only the action from the (action, utility) tuple
+        sortedActions = [itemgetter(0)]
+
+        return sortedActions
 
     # Function that calculates the individual score of each player, without considering the opponent
     @classmethod
