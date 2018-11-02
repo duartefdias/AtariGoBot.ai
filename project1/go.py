@@ -11,6 +11,9 @@ from operator import itemgetter
 
 class Game:
     """Atari Go game engine"""
+
+    # Declare the variable corresponding to the real state of the game (not the same as in the AI's simulations)
+    gameState = []
     
     def __init__(self):
         self.boardSize = 0
@@ -24,7 +27,7 @@ class Game:
         self.groups = []
 
         # Declare the variable corresponding to the real state of the game (not the same as in the AI's simulations)
-        self.state = []
+        # self.state = []
 
     def to_move(self, s):
         # Returns the player to move next given the state s TENHO FOME
@@ -79,9 +82,9 @@ class Game:
                     minDofPlayerOne = group.dof
 
                     # Checking if game has ended at this point
-                    if minDofPlayerOne == 0 & p == 1:
+                    if minDofPlayerOne == 0 and p == 1:
                         return -1
-                    elif minDofPlayerOne == 0 & p == 2:
+                    elif minDofPlayerOne == 0 and p == 2:
                         return 1
 
                 sumOne += group.dof
@@ -92,9 +95,9 @@ class Game:
                     minDofPlayerTwo = group.dof
 
                     # Checking if game has ended at this point
-                    if minDofPlayerTwo == 0 & p == 1:
+                    if minDofPlayerTwo == 0 and p == 1:
                         return 1
-                    elif minDofPlayerTwo == 0 & p == 2:
+                    elif minDofPlayerTwo == 0 and p == 2:
                         return -1
                     
                 sumTwo += group.dof  
@@ -120,9 +123,15 @@ class Game:
 
     def actions(self, s):
             # Check if the state corresponds to the real one or to a simulation
-            if s == self.state:
+            if self.get_object_reference(s) == self.get_object_reference(Game.gameState):
+                ############# Debug #####################################
+                actionsList = self.sort_actions(s)
+                # print("Sorted actions: " str(actionsList))
+                return actionsList
+                #########################################################
+
                 # Sort the actions by the utility given in the first move
-                return self.sort_actions(s)
+                # return self.sort_actions(s)
             else:
                 # Just remove the suicidal moves
                 return self.remove_suicides(s)
@@ -180,7 +189,7 @@ class Game:
         state = self.get_groups(state)
 
         # Save the real board's state in the game object (to distinguish from the AI's simulated states)
-        self.state = state
+        Game.gameState = state
 
         return state
 
@@ -305,12 +314,13 @@ class Game:
             if s[i+2] == 0:
                 action = (player, row, column)
 
-                if action == suicidalPlays[0]:
-                    # Remove the suicidal action from the list of suicidal actions
-                    suicidalPlays = suicidalPlays[1:]
+                if len(suicidalPlays) > 0:
+                    if action == suicidalPlays[0]:
+                        # Remove the suicidal action from the list of suicidal actions
+                        suicidalPlays = suicidalPlays[1:]
 
-                    # Skip this action
-                    continue
+                        # Skip this action
+                        continue
 
                 # Simulate the current action
                 simState = copy.deepcopy(s)
@@ -336,7 +346,7 @@ class Game:
         sortedActions = sorted(sortedActions, key=itemgetter(1), reverse=True)
 
         # Get only the action from the (action, utility) tuple
-        sortedActions = [itemgetter(0)]
+        sortedActions = list(map(itemgetter(0), sortedActions))
 
         return sortedActions
 
@@ -394,6 +404,10 @@ class Game:
         max_score = self.calc_solo_score(max_dof, max_dof)
 
         return max_score
+
+    @classmethod
+    def get_object_reference(self, obj):
+        return hex(id(obj))
 
 
 ##########################################################
