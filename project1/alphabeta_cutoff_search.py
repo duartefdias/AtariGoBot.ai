@@ -25,18 +25,7 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
 
             ############# Debug #####################################
             # Print board
-            # print('\n')
-            # for i in range(2, len(state)-1):
-            #     if state[i] == 0:
-            #         print(' _ ', end="")
-            #     if state[i] % 2 == 1:
-            #         print(' X ', end="")
-            #     if state[i] % 2 == 0 and state[i] != 0:
-            #         print(' O ', end="")
-            #     if ((i-1) % game.boardSize) == 0:
-            #         print('\n')
-
-            # print(state)
+            # game.print_board(state)
             #########################################################
 
             v = max(v, min_value(game.result(state, a),
@@ -54,18 +43,7 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
 
             ############# Debug #####################################
             # Print board
-            # print('\n')
-            # for i in range(2, len(state)-1):
-            #     if state[i] == 0:
-            #         print(' _ ', end="")
-            #     if state[i] % 2 == 1:
-            #         print(' X ', end="")
-            #     if state[i] % 2 == 0 and state[i] != 0:
-            #         print(' O ', end="")
-            #     if ((i-1) % game.boardSize) == 0:
-            #         print('\n')
-
-            # print(state)
+            # game.print_board(state)
             #########################################################
 
             v = min(v, max_value(game.result(state, a),
@@ -88,18 +66,7 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
 
         ############# Debug #####################################
         # Print board
-        # print('\n')
-        # for i in range(2, len(state)-1):
-        #     if state[i] == 0:
-        #         print(' _ ', end="")
-        #     if state[i] % 2 == 1:
-        #         print(' X ', end="")
-        #     if state[i] % 2 == 0 and state[i] != 0:
-        #         print(' O ', end="")
-        #     if ((i-1) % game.boardSize) == 0:
-        #         print('\n')
-
-        # print(state)
+        # game.print_board(state)
         #########################################################
 
         v = min_value(game.result(state, a), best_score, beta, 1)

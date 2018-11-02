@@ -125,13 +125,13 @@ class Game:
             # Check if the state corresponds to the real one or to a simulation
             if self.get_object_reference(s) == self.get_object_reference(Game.gameState):
                 ############# Debug #####################################
-                actionsList = self.sort_actions(s)
+                # actionsList = self.sort_actions(s)
                 # print("Sorted actions: " str(actionsList))
-                return actionsList
+                # return actionsList
                 #########################################################
 
                 # Sort the actions by the utility given in the first move
-                # return self.sort_actions(s)
+                return self.sort_actions(s)
             else:
                 # Just remove the suicidal moves
                 return self.remove_suicides(s)
@@ -408,6 +408,33 @@ class Game:
     @classmethod
     def get_object_reference(self, obj):
         return hex(id(obj))
+
+    def print_board(self, s, print_ids=False):
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + self.boardSize * self.boardSize
+
+        print('\n')
+
+        if not print_ids:
+            for i in range(2, len(s)-1):
+                if s[i] == 0:
+                    print(' _ ', end="")
+                if s[i] % 2 == 1:
+                    print(' X ', end="")
+                if s[i] % 2 == 0 and s[i] != 0:
+                    print(' O ', end="")
+                if ((i-1) % self.boardSize) == 0:
+                    print('\n')
+        else:
+            for i in range(2, len(s)-1):
+                if s[i] == 0:
+                    print(' _ ', end="")
+                else:
+                    print(' ' + s[game_pos_in_state].get_board_space(s, i-2) + ' ', end="")
+                if ((i-1) % self.boardSize) == 0:
+                    print('\n')
+
+        print(s)
 
 
 ##########################################################

@@ -5,25 +5,14 @@ s = []
 endGame = 0
 
 myGame = go.Game()
-s = myGame.load_board(open('boards/assignment_example.txt', 'r'))
+s = myGame.load_board(open('boards/test5_3.txt', 'r'))
 
 while not endGame:
     # Set playerMove to 0, indicating that the player hasn't yet chosen a valid move
     playerMove = 0
 
     # Print board
-    print('\n')
-    for i in range(2, len(s)-1):
-        if s[i] == 0:
-            print(' _ ', end="")
-        if s[i] % 2 == 1:
-            print(' X ', end="")
-        if s[i] % 2 == 0 and s[i] != 0:
-            print(' O ', end="")
-        if ((i-1) % myGame.boardSize) == 0:
-            print('\n')
-
-    print(s)
+    myGame.print_board(s)
 
     # Player's turn
     while playerMove == 0:
@@ -36,7 +25,7 @@ while not endGame:
         else:
             while not playerInputY.isdigit():
                 playerInputY = input("Y: ")
-            playerInput = (1, int(playerInputX), int(playerInputY))
+            playerInput = (2, int(playerInputX), int(playerInputY))
             for possibleAction in myGame.actions(s):
                 if playerInput == possibleAction:
                     playerMove = playerInput
@@ -47,18 +36,7 @@ while not endGame:
     s = myGame.result(s, playerMove)
 
     # Print board
-    print('\n')
-    for i in range(2, len(s)-1):
-        if s[i] == 0:
-            print(' _ ', end="")
-        if s[i] % 2 == 1:
-            print(' X ', end="")
-        if s[i] % 2 == 0 and s[i] != 0:
-            print(' O ', end="")
-        if ((i-1) % myGame.boardSize) == 0:
-            print('\n')
-
-    print(s)
+    myGame.print_board(s)
 
     endGame = myGame.terminal_test(s)
     
@@ -67,7 +45,7 @@ while not endGame:
 
     # End of human's turn
     # Set next player to AI
-    s[1] = 2
+    s[1] = 1
 
     # AI's turn
     # MAGIC AI code
@@ -88,15 +66,4 @@ while not endGame:
     endGame = myGame.terminal_test(s)
 
 # Print the final board
-print('\n')
-for i in range(2, len(s)-1):
-    if s[i] == 0:
-        print(' _ ', end="")
-    if s[i] % 2 == 1:
-        print(' X ', end="")
-    if s[i] % 2 == 0 and s[i] != 0:
-        print(' O ', end="")
-    if ((i-1) % myGame.boardSize) == 0:
-        print('\n')
-
-print(s)
+myGame.print_board(s)
