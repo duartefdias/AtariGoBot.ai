@@ -200,7 +200,7 @@ class Game:
         return 1
 
     def get_groups(self, s):
-        for piecePos in range(0, (self.boardSize * self.boardSize) - 1):
+        for piecePos in range(0, self.boardSize * self.boardSize):
             if s[piecePos + 2] != 0:
                 # Specify to which player the piece belongs to
                 player = s[piecePos + 2]
@@ -213,6 +213,11 @@ class Game:
 
                 # Search for possible nearby allied groups to join to
                 s = newPiece.search_nearby_groups(s, self, piecePos, player, board_init=True)
+
+                ############# Debug #####################################
+                # Print board
+                # self.print_board(s, print_ids=True)
+                #########################################################
 
         return s
 
