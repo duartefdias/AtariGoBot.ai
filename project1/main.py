@@ -5,7 +5,7 @@ s = []
 endGame = 0
 
 myGame = go.Game()
-s = myGame.load_board(open('boards/test5_3.txt', 'r'))
+s = myGame.load_board(open('boards/test3_2.txt', 'r'))
 
 while not endGame:
     # Set playerMove to 0, indicating that the player hasn't yet chosen a valid move
@@ -26,12 +26,13 @@ while not endGame:
             while not playerInputY.isdigit():
                 playerInputY = input("Y: ")
             playerInput = (2, int(playerInputX), int(playerInputY))
-            for possibleAction in myGame.actions(s):
-                if playerInput == possibleAction:
-                    playerMove = playerInput
-                    break
-            if playerMove == 0:
-                print('Invalid move! Try again!')
+            playerMove = playerInput # Debug test 3.3
+            # for possibleAction in myGame.actions(s):
+            #     if playerInput == possibleAction:
+            #         playerMove = playerInput
+            #         break
+            # if playerMove == 0:
+            #     print('Invalid move! Try again!')
     
     s = myGame.result(s, playerMove)
 
@@ -39,6 +40,10 @@ while not endGame:
     myGame.print_board(s)
 
     endGame = myGame.terminal_test(s)
+
+    # Debug test 3.3
+    print("Player 1's utility: " + str(myGame.utility(s, 1)))
+    print("Player 2's utility: " + str(myGame.utility(s, 2)))
     
     if endGame:
         break

@@ -5,7 +5,7 @@ from collections import namedtuple
 import random
 import itertools
 import copy
-import tqdm
+from tqdm import tqdm
 
 infinity = float('inf')
 GameState = namedtuple('GameState', 'to_move, utility, board, moves')
@@ -63,7 +63,7 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
     best_score = -infinity
     beta = infinity
     best_action = None
-    for a in game.actions(state):
+    for a in tqdm(game.actions(state)):
 
         ############# Debug #####################################
         # Print board

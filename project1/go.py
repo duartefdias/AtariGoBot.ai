@@ -63,20 +63,8 @@ class Game:
         # The position of the game variable in the state
         game_pos_in_state = 2 + self.boardSize * self.boardSize
 
-        # Consider the state in case of being the other player playing
-        otherPlayerState = s
-
-        if s[1] == 1:
-            otherPlayerState[1] = 2
-        else:
-            otherPlayerState[1] = 1
-
-        # Tests if there are no more possible actions (draw)
-        if s[game_pos_in_state].actions(s) == [] and otherPlayerState[game_pos_in_state].actions(otherPlayerState) == []:
-            return 0
-
         # Search in game for min DOF and sums DOFs of groups for both players
-        for group in s[game_pos_in_state].groups:
+        for group in reversed(s[game_pos_in_state].groups):
             if group.player == 1:
                 if(group.dof < minDofPlayerOne):
                     minDofPlayerOne = group.dof
@@ -101,7 +89,20 @@ class Game:
                         return -1
                     
                 sumTwo += group.dof  
-                j += 1 # counting the number of DOF's summed         
+                j += 1 # counting the number of DOF's summed  
+
+        # Consider the state in case of being the other player playing, without pointing to the same object
+        # (use different reference in memory to avoid changing s)
+        otherPlayerState = copy.deepcopy(s)
+
+        if s[1] == 1:
+            otherPlayerState[1] = 2
+        else:
+            otherPlayerState[1] = 1
+
+        # Tests if there are no more possible actions (draw)
+        if s[game_pos_in_state].actions(s) == [] and otherPlayerState[game_pos_in_state].actions(otherPlayerState) == []:
+            return 0       
      
         # Getting the average DOF of both players
         avgDofPlayerOne = sumOne / i
