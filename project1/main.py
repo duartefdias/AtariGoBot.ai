@@ -5,7 +5,7 @@ s = []
 endGame = 0
 
 myGame = go.Game()
-s = myGame.load_board(open('boards/test3_2.txt', 'r'))
+s = myGame.load_board(open('boards/test4_1.txt', 'r'))
 
 while not endGame:
     # Set playerMove to 0, indicating that the player hasn't yet chosen a valid move
@@ -25,7 +25,7 @@ while not endGame:
         else:
             while not playerInputY.isdigit():
                 playerInputY = input("Y: ")
-            playerInput = (2, int(playerInputX), int(playerInputY))
+            playerInput = (s[1], int(playerInputX), int(playerInputY))
             playerMove = playerInput # Debug test 3.3
             # for possibleAction in myGame.actions(s):
             #     if playerInput == possibleAction:
@@ -50,7 +50,7 @@ while not endGame:
 
     # End of human's turn
     # Set next player to AI
-    # s[1] = 1
+    # s[1] = 2
 
     # AI's turn
     # MAGIC AI code
@@ -66,7 +66,7 @@ while not endGame:
 
     # End of AI's turn
     # Set next player to human
-    s[1] = 1
+    # s[1] = 1
 
     endGame = myGame.terminal_test(s)
 
