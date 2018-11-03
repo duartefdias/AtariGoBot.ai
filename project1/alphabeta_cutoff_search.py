@@ -5,6 +5,7 @@ from collections import namedtuple
 import random
 import itertools
 import copy
+import tqdm
 
 infinity = float('inf')
 GameState = namedtuple('GameState', 'to_move, utility, board, moves')
@@ -25,7 +26,7 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
 
             ############# Debug #####################################
             # Print board
-            # game.print_board(state)
+            # game.print_board(state, print_ids=True)
             #########################################################
 
             v = max(v, min_value(game.result(state, a),
@@ -43,7 +44,7 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
 
             ############# Debug #####################################
             # Print board
-            # game.print_board(state)
+            # game.print_board(state, print_ids=True)
             #########################################################
 
             v = min(v, max_value(game.result(state, a),

@@ -45,7 +45,7 @@ while not endGame:
 
     # End of human's turn
     # Set next player to AI
-    s[1] = 1
+    # s[1] = 1
 
     # AI's turn
     # MAGIC AI code

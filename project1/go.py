@@ -332,11 +332,15 @@ class Game:
                 opponentAction = (opponent, row, column)
                 simStateOpponent = simStateOpponent[game_pos_in_state].result(simStateOpponent, opponentAction)
 
+                realPlayerUtility = simState[game_pos_in_state].utility(simState, player)
+
                 # If the opponent could win imediatly, add a big score to occupying that space
-                if simStateOpponent[game_pos_in_state].utility(simStateOpponent, opponent) == 1:
+                if realPlayerUtility == 1:
+                    utilityCurrentPlay = 1
+                elif simStateOpponent[game_pos_in_state].utility(simStateOpponent, opponent) == 1:
                     utilityCurrentPlay = 0.999999
                 else:
-                    utilityCurrentPlay = simState[game_pos_in_state].utility(simState, player)
+                    utilityCurrentPlay = realPlayerUtility
 
                 # Add the (action, utility) tuple to the list of actions
                 actionUtilityTuple = (action, utilityCurrentPlay)
@@ -430,7 +434,7 @@ class Game:
                 if s[i] == 0:
                     print(' _ ', end="")
                 else:
-                    print(' ' + s[game_pos_in_state].get_board_space(s, i-2) + ' ', end="")
+                    print(' ' + str(s[game_pos_in_state].get_board_space(s, i-2)) + ' ', end="")
                 if ((i-1) % self.boardSize) == 0:
                     print('\n')
 
@@ -610,6 +614,12 @@ class Group:
         piece_row = int(piece / game.boardSize) + 1
         piece_column = piece % game.boardSize + 1
 
+        # List of groups that the new pieced affected (by decreasing the degrees of freedom)
+        groupsDofChanged = []
+
+        # List of groups that the new piece joined to
+        groupsJoined = []
+
         if not board_init:
             player = state[1]
 
@@ -626,62 +636,115 @@ class Group:
                         if group.id == game.get_board_space(state, piece + 1):
                             # Join the groups
                             [state, real_group] = real_group.join_group(group, game, state, player)
+
+                            # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
+                            groupsJoined.append(group.id)
                             break
+                # Check if right side has different "parity" and it's not loading the board 
                 elif game.get_board_space(state, piece + 1) % 2 != (self.player % 2) and not board_init:
                     # Subtract a degree of freedom from the adjacent opponent group
                     for group in game.groups:
                         if group.id == game.get_board_space(state, piece + 1):
+                            # Decrease the adjacent group's degrees of freedom
                             group.dof -= 1
+
+                            # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
+                            groupsDofChanged.append(group.id)
 
         # Check if the space at the left of the piece exists
         if piece_column > 1:
             # Check if the space at the left of the piece is occupied with an allied piece
             if game.get_board_space(state, piece - 1) != 0:
-                if game.get_board_space(state, piece - 1) % 2 == (self.player % 2): 
-                    # Join group of the same player       
+                # Check if the piece at the left is of the same player
+                # and was not previously joined in the same group
+                if game.get_board_space(state, piece - 1) % 2 == (self.player % 2) \
+                   and not game.get_board_space(state, piece - 1) in groupsJoined: 
+                    # Join group of the same player
                     for group in game.groups:
                         if group.id == game.get_board_space(state, piece - 1):                  
                             # Join the groups
                             [state, real_group] = real_group.join_group(group, game, state, player)
+
+                            # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
+                            groupsJoined.append(group.id)
                             break
-                elif game.get_board_space(state, piece - 1) % 2 != (self.player % 2) and not board_init:
+                # Check if left side has different "parity", 
+                # it's not loading the board 
+                # and the group wasn't previously affected
+                elif game.get_board_space(state, piece - 1) % 2 != (self.player % 2) \
+                     and not board_init \
+                     and not game.get_board_space(state, piece - 1) in groupsDofChanged:
                     # Subtract a degree of freedom from the adjacent opponent group
                     for group in game.groups:
                         if group.id == game.get_board_space(state, piece - 1):
+                            # Decrease the adjacent group's degrees of freedom
                             group.dof -= 1
+
+                            # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
+                            groupsDofChanged.append(group.id)
 
         # Check if the space above the piece exists
         if piece_row > 1:
             # Check if the space above the piece is occupied with an allied piece
             if game.get_board_space(state, piece - game.boardSize) != 0:
-                if game.get_board_space(state, piece - game.boardSize) % 2 == (self.player % 2):
+                # Check if the piece above is of the same player
+                # and was not previously joined in the same group
+                if game.get_board_space(state, piece - game.boardSize) % 2 == (self.player % 2) \
+                   and not game.get_board_space(state, piece - game.boardSize) in groupsJoined: 
                     # Join group of the same player
                     for group in game.groups:
                         if group.id == game.get_board_space(state, piece - game.boardSize):
                             # Join the groups
                             [state, real_group] = real_group.join_group(group, game, state, player)
+
+                            # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
+                            groupsJoined.append(group.id)
                             break
-                elif game.get_board_space(state, piece - game.boardSize) % 2 != (self.player % 2) and not board_init:
+                # Check if the piece above has different "parity", 
+                # it's not loading the board 
+                # and the group wasn't previously affected
+                elif game.get_board_space(state, piece - game.boardSize) % 2 != (self.player % 2) \
+                     and not board_init \
+                     and not game.get_board_space(state, piece - game.boardSize) in groupsDofChanged:
                     # Subtract a degree of freedom from the adjacent opponent group
                     for group in game.groups:
                         if group.id == game.get_board_space(state, piece - game.boardSize):
+                            # Decrease the adjacent group's degrees of freedom
                             group.dof -= 1
+
+                            # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
+                            groupsDofChanged.append(group.id)
 
         # Check if the space bellow the piece exists
         if piece_row < game.boardSize:
             # Check if the space bellow the piece is occupied with an allied piece
             if game.get_board_space(state, piece + game.boardSize) != 0:
-                if game.get_board_space(state, piece + game.boardSize) % 2 == (self.player % 2):
+                # Check if the piece bellow is of the same player
+                # and was not previously joined in the same group
+                if game.get_board_space(state, piece + game.boardSize) % 2 == (self.player % 2) \
+                   and not game.get_board_space(state, piece + game.boardSize) in groupsJoined: 
                     # Join group of the same player
                     for group in game.groups:
                         if group.id == game.get_board_space(state, piece + game.boardSize):
                             # Join the groups
                             [state, real_group] = real_group.join_group(group, game, state, player)
+
+                            # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
+                            groupsJoined.append(group.id)
                             break
-                elif game.get_board_space(state, piece + game.boardSize) % 2 != (self.player % 2) and not board_init:
+                # Check if the piece bellow has different "parity", 
+                # it's not loading the board 
+                # and the group wasn't previously affected
+                elif game.get_board_space(state, piece + game.boardSize) % 2 != (self.player % 2) \
+                     and not board_init \
+                     and not game.get_board_space(state, piece + game.boardSize) in groupsDofChanged:
                     # Subtract a degree of freedom from the adjacent opponent group
                     for group in game.groups:
                         if group.id == game.get_board_space(state, piece + game.boardSize):
+                            # Decrease the adjacent group's degrees of freedom
                             group.dof -= 1
+
+                            # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
+                            groupsDofChanged.append(group.id)
 
         return state
