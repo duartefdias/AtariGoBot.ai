@@ -1,2 +1,5 @@
 project1/.vscode/settings.json
 *.pyc
+.DS_Store
+project1/data_analysis/.ipynb_checkpoints/time-performance-checkpoint.ipynb
+*.stats
