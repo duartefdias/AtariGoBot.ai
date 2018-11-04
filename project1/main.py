@@ -1,10 +1,10 @@
-import go
+import go2
 from alphabeta_cutoff_search import alphabeta_cutoff_search
 
 s = []
 endGame = 0
 
-myGame = go.Game()
+myGame = go2.Game()
 s = myGame.load_board(open('boards/test4_1.txt', 'r'))
 
 while not endGame:

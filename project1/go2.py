@@ -26,18 +26,25 @@ class Game:
         # Initialize the groups list as empty
         self.groups = []
 
-        # Declare the variable corresponding to the real state of the game (not the same as in the AI's simulations)
-        # self.state = []
+        # IDs of groups that have been captured (DOF reduced to 0) of each player
+        # zeroedGroup[0] is the ID of a player 1's group that has been captured by player 2
+        # zeroedGroup[1] is the ID of a player 2's group that has been captured by player 1
+        # When zeroedGroup[i] = -1, it means that player i hasn't lost (has no group captured by the opponent)
+        self.zeroedGroup = [-1, -1]
 
     def to_move(self, s):
-        # Returns the player to move next given the state s TENHO FOME
+        # Returns the player to move next given the state s
         return s[1]
-    
-    def terminal_test(self, s):
-        # Returns a boolean of whether the state s is terminal
 
+    # Returns a boolean of whether the state s is terminal
+    def terminal_test(self, s):
         # The position of the game variable in the state
         game_pos_in_state = 2 + self.boardSize * self.boardSize
+
+        # Checking if any player has won
+        for capturedID in s[game_pos_in_state].zeroedGroup:
+            if capturedID > 2:
+                return True
 
         # Tests if game ends because DOF = 0 of either players
         for group in s[game_pos_in_state].groups:
@@ -60,8 +67,20 @@ class Game:
         sumOne = 0
         sumTwo = 0
 
+        if p == 1:
+            opponent = 2
+        else:
+            opponent = 1
+
         # The position of the game variable in the state
         game_pos_in_state = 2 + self.boardSize * self.boardSize
+
+        # Checking if the player p has lost
+        if s[game_pos_in_state].zeroedGroup[p-1] > 2:
+            return -1
+        # Checking if the player p has won
+        elif s[game_pos_in_state].zeroedGroup[opponent-1] > 2:
+            return 1
 
         # Search in game for min DOF and sums DOFs of groups for both players
         for group in reversed(s[game_pos_in_state].groups):
@@ -69,9 +88,10 @@ class Game:
                 if(group.dof < minDofPlayerOne):
                     minDofPlayerOne = group.dof
 
-                    # Checking if game has ended at this point
+                    # Checking if the player 1 has lost
                     if minDofPlayerOne == 0 and p == 1:
                         return -1
+                    # Checking if the player 1 has won
                     elif minDofPlayerOne == 0 and p == 2:
                         return 1
 
@@ -82,9 +102,10 @@ class Game:
                 if group.dof < minDofPlayerTwo:
                     minDofPlayerTwo = group.dof
 
-                    # Checking if game has ended at this point
+                    # Checking if the player 2 has won
                     if minDofPlayerTwo == 0 and p == 1:
                         return 1
+                    # Checking if the player 2 has lost
                     elif minDofPlayerTwo == 0 and p == 2:
                         return -1
                     
@@ -249,6 +270,9 @@ class Game:
         # The position of the game variable in the state
         game_pos_in_state = 2 + self.boardSize * self.boardSize
 
+        # Current player
+        player = s[1]
+
         # Go through each space of the board
         for i in range(0, self.boardSize * self.boardSize):
             row = int(i / self.boardSize) + 1
@@ -256,6 +280,9 @@ class Game:
 
             # Flag to check if a move is suicidal
             isSuicidal = False
+
+            # Flag to check if a suicidal move captures an opponent group
+            isCapture = False
 
             # Check for free spaces in board
             if s[i+2] == 0:
@@ -277,12 +304,17 @@ class Game:
                                         if group.dof == 0:
                                             isSuicidal = True
 
-                                            # If the actions are being sorted, return the suicidal moves
-                                            if sort:
-                                                suicidalPlays.append((s[1], row, column))
+                                    # Check if there's an enemy group that got captured
+                                    if group.id % 2 != player % 2:
+                                        if group.dof == 0:
+                                            isCapture = True
+
+                # If the actions are being sorted, return the suicidal moves
+                if isSuicidal and not isCapture and sort:
+                    suicidalPlays.append((s[1], row, column))
                                                 
                 # If the the actions are not being sorted, like in a simulation, return the possible moves
-                if not isSuicidal and not sort:
+                elif ((not isSuicidal) or isCapture) and not sort:
                     possiblePlays.append((s[1], row, column))
 
         if sort:
@@ -483,24 +515,16 @@ class Group:
             print('ERROR: Can\'t join groups from different players.')
             return None
 
-        # See what's the biggest group, which should be kept
-        if(self.get_number_pieces(game, state) > group.get_number_pieces(game, state)):
-            big_group = self
-            small_group = group
-        else:
-            big_group = group
-            small_group = self
-
         for i in range(0, game.boardSize * game.boardSize):
-            if game.get_board_space(state, i) == small_group.id:
-                # Change the small group's pieces IDs to the ID of the big group
-                state = game.set_board_space(state, i, big_group.id)
+            if game.get_board_space(state, i) == self.id:
+                # Change the old group's pieces IDs to the ID of the new group
+                state = game.set_board_space(state, i, group.id)
 
         # Update the new group's degrees of freedom
-        big_group.dof = big_group.get_dof(game, state)
+        group.dof = group.get_dof(game, state)
 
         # Temporarly save the ID of the group that will be eliminated
-        old_id = small_group.id
+        old_id = self.id
 
         # Delete the old group
         for i in range(0, game.groups.__len__()):
@@ -511,7 +535,7 @@ class Group:
         # Add the deleted group's ID to the top of the list of the player's free IDs
         game.freeIds[player-1] = [old_id] + game.freeIds[player-1]
 
-        return [state, big_group]
+        return [state, group]
 
     # Get the total number of pieces in the group
     def get_number_pieces(self, game, state):
@@ -688,9 +712,15 @@ class Group:
                 # Subtract a degree of freedom from the adjacent opponent group
                 for group in game.groups:
                     if group.id == game.get_board_space(state, side_config):
-                        # Decrease the adjacent group's degrees of freedom
-                        group.dof -= 1
+                           # Decrease the adjacent group's degrees of freedom
+                            group.dof -= 1
 
-                        # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
-                        groupsDofChanged.append(group.id)
+                            # Check if the nearby enemy group got captured
+                            if group.dof == 0:
+                            # Take note of the opponent group that got captured
+                            game.zeroedGroup[opponent-1] = group.id
+
+                            # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
+                            groupsDofChanged.append(group.id)
+                            break
         return 
