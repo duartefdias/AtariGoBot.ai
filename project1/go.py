@@ -483,24 +483,16 @@ class Group:
             print('ERROR: Can\'t join groups from different players.')
             return None
 
-        # See what's the biggest group, which should be kept
-        if(self.get_number_pieces(game, state) > group.get_number_pieces(game, state)):
-            big_group = self
-            small_group = group
-        else:
-            big_group = group
-            small_group = self
-
         for i in range(0, game.boardSize * game.boardSize):
-            if game.get_board_space(state, i) == small_group.id:
-                # Change the small group's pieces IDs to the ID of the big group
-                state = game.set_board_space(state, i, big_group.id)
+            if game.get_board_space(state, i) == self.id:
+                # Change the old group's pieces IDs to the ID of the new group
+                state = game.set_board_space(state, i, group.id)
 
         # Update the new group's degrees of freedom
-        big_group.dof = big_group.get_dof(game, state)
+        group.dof = group.get_dof(game, state)
 
         # Temporarly save the ID of the group that will be eliminated
-        old_id = small_group.id
+        old_id = self.id
 
         # Delete the old group
         for i in range(0, game.groups.__len__()):
@@ -511,7 +503,7 @@ class Group:
         # Add the deleted group's ID to the top of the list of the player's free IDs
         game.freeIds[player-1] = [old_id] + game.freeIds[player-1]
 
-        return [state, big_group]
+        return [state, group]
 
     # Get the total number of pieces in the group
     def get_number_pieces(self, game, state):
@@ -634,8 +626,9 @@ class Group:
 
         # Check if the space at the right of the piece exists
         if piece_column < game.boardSize:
-            # Check if the space at the right of the piece is occupied with an allied piece
+            # Check if the space at the right of the piece is occupied
             if game.get_board_space(state, piece + 1) != 0:
+                # Check if the space at the right of the piece is occupied with an allied piece
                 if game.get_board_space(state, piece + 1) % 2 == (self.player % 2):
                     # Join group of the same player
                     for group in game.groups:
@@ -656,10 +649,10 @@ class Group:
 
                             # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
                             groupsDofChanged.append(group.id)
-
+                            break
         # Check if the space at the left of the piece exists
         if piece_column > 1:
-            # Check if the space at the left of the piece is occupied with an allied piece
+            # Check if the space at the left of the piece is occupied
             if game.get_board_space(state, piece - 1) != 0:
                 # Check if the piece at the left is of the same player
                 # and was not previously joined in the same group
@@ -688,10 +681,10 @@ class Group:
 
                             # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
                             groupsDofChanged.append(group.id)
-
+                            break
         # Check if the space above the piece exists
         if piece_row > 1:
-            # Check if the space above the piece is occupied with an allied piece
+            # Check if the space above the piece is occupied
             if game.get_board_space(state, piece - game.boardSize) != 0:
                 # Check if the piece above is of the same player
                 # and was not previously joined in the same group
@@ -720,10 +713,10 @@ class Group:
 
                             # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
                             groupsDofChanged.append(group.id)
-
+                            break
         # Check if the space bellow the piece exists
         if piece_row < game.boardSize:
-            # Check if the space bellow the piece is occupied with an allied piece
+            # Check if the space bellow the piece is occupied
             if game.get_board_space(state, piece + game.boardSize) != 0:
                 # Check if the piece bellow is of the same player
                 # and was not previously joined in the same group
@@ -752,5 +745,5 @@ class Group:
 
                             # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
                             groupsDofChanged.append(group.id)
-
+                            break
         return state

@@ -15,6 +15,9 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
     """Search game to determine best action; use alpha-beta pruning.
     This version cuts off search and uses an evaluation function."""
 
+    # The position of the game variable in the state
+    game_pos_in_state = 2 + game.boardSize * game.boardSize
+
     player = game.to_move(state)
 
     # Functions used by alphabeta
@@ -27,6 +30,9 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
             ############# Debug #####################################
             # Print board
             # game.print_board(state, print_ids=True)
+            # print(state)
+            # if state == [5, 2, 4, 0, 7, 7, 0, 4, 4, 4, 4, 9, 4, 4, 3, 4, 0, 3, 3, 3, 0, 0, 0, 3, 0, 5, 0, state[game_pos_in_state]]:
+            #     print("\nOh oh spaghettiohs\n")
             #########################################################
 
             v = max(v, min_value(game.result(state, a),
@@ -45,6 +51,9 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
             ############# Debug #####################################
             # Print board
             # game.print_board(state, print_ids=True)
+            # print(state)
+            # if state == [5, 2, 4, 0, 7, 7, 0, 4, 4, 4, 4, 9, 4, 4, 3, 4, 0, 3, 3, 3, 0, 0, 0, 3, 0, 5, 0, state[game_pos_in_state]]:
+            #     print("\nOh oh spaghettiohs\n")
             #########################################################
 
             v = min(v, max_value(game.result(state, a),
@@ -67,7 +76,10 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
 
         ############# Debug #####################################
         # Print board
-        # game.print_board(state)
+        # game.print_board(state, print_ids=True)
+        # print(state)
+        # if state == [5, 2, 4, 0, 7, 7, 0, 4, 4, 4, 4, 9, 4, 4, 3, 4, 0, 3, 3, 3, 0, 0, 0, 3, 0, 5, 0, state[game_pos_in_state]]:
+        #     print("\nOh oh spaghettiohs\n")
         #########################################################
 
         v = min_value(game.result(state, a), best_score, beta, 1)

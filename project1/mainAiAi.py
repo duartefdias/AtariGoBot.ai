@@ -16,7 +16,7 @@ def mainAiAi():
         print("Player 2's utility (O): " + str(myGame.utility(s, 2)))
 
         # AI 1's turn
-        AiMove = alphabeta_cutoff_search(s, myGame, d=5)
+        AiMove = alphabeta_cutoff_search(s, myGame, d=4)
         if AiMove:
             s = myGame.result(s, AiMove)
         endGame = myGame.terminal_test(s)
@@ -29,7 +29,7 @@ def mainAiAi():
         print("Player 2's utility (O): " + str(myGame.utility(s, 2)))
 
         # AI 2's turn
-        AiMove = alphabeta_cutoff_search(s, myGame, d=5)
+        AiMove = alphabeta_cutoff_search(s, myGame, d=4)
         if AiMove:
             s = myGame.result(s, AiMove)
         endGame = myGame.terminal_test(s)
