@@ -30,7 +30,7 @@ class Game:
         # self.state = []
 
     def to_move(self, s):
-        # Returns the player to move next given the state s TENHO FOME
+        # Returns the player to move next given the state s
         return s[1]
     
     def terminal_test(self, s):
