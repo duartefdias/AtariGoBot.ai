@@ -5,7 +5,7 @@ s = []
 endGame = 0
 
 myGame = go.Game()
-s = myGame.load_board(open('boards/emptyBoard.txt', 'r'))
+s = myGame.load_board(open('boards/suicideTestSmall.txt', 'r'))
 
 while not endGame:
     # Set playerMove to 0, indicating that the player hasn't yet chosen a valid move
@@ -26,7 +26,7 @@ while not endGame:
             while not playerInputY.isdigit():
                 playerInputY = input("Y: ")
             playerInput = (s[1], int(playerInputX), int(playerInputY))
-            playerMove = playerInput # Debug test 3.3
+            playerMove = playerInput
             # for possibleAction in myGame.actions(s):
             #     if playerInput == possibleAction:
             #         playerMove = playerInput
