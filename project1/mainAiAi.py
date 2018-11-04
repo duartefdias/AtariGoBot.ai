@@ -7,7 +7,7 @@ def mainAiAi():
     endGame = 0
 
     myGame = go.Game()
-    s = myGame.load_board(open('boards/emptyBoard.txt', 'r'))
+    s = myGame.load_board(open('boards/test5_3.txt', 'r'))
 
     while not endGame:
         # Print board
@@ -16,8 +16,9 @@ def mainAiAi():
         print("Player 2's utility (O): " + str(myGame.utility(s, 2)))
 
         # AI 1's turn
-        AiMove = alphabeta_cutoff_search(s, myGame, d=1)
-        s = myGame.result(s, AiMove)
+        AiMove = alphabeta_cutoff_search(s, myGame, d=5)
+        if AiMove:
+            s = myGame.result(s, AiMove)
         endGame = myGame.terminal_test(s)
 
         if endGame:
@@ -28,8 +29,9 @@ def mainAiAi():
         print("Player 2's utility (O): " + str(myGame.utility(s, 2)))
 
         # AI 2's turn
-        AiMove = alphabeta_cutoff_search(s, myGame, d=1)
-        s = myGame.result(s, AiMove)
+        AiMove = alphabeta_cutoff_search(s, myGame, d=5)
+        if AiMove:
+            s = myGame.result(s, AiMove)
         endGame = myGame.terminal_test(s)
 
     # Print the final board
