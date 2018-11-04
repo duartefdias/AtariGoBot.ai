@@ -5,7 +5,7 @@ s = []
 endGame = 0
 
 myGame = go.Game()
-s = myGame.load_board(open('boards/assignment_example.txt', 'r'))
+s = myGame.load_board(open('boards/test4_1.txt', 'r'))
 
 while not endGame:
     # Set playerMove to 0, indicating that the player hasn't yet chosen a valid move
@@ -13,6 +13,8 @@ while not endGame:
 
     # Print board
     myGame.print_board(s)
+    print("Player 1's utility (X): " + str(myGame.utility(s, 1)))
+    print("Player 2's utility (O): " + str(myGame.utility(s, 2)))
 
     # Player's turn
     while playerMove == 0:
@@ -27,17 +29,19 @@ while not endGame:
                 playerInputY = input("Y: ")
             playerInput = (s[1], int(playerInputX), int(playerInputY))
             playerMove = playerInput
-            # for possibleAction in myGame.actions(s):
-            #     if playerInput == possibleAction:
-            #         playerMove = playerInput
-            #         break
-            # if playerMove == 0:
-            #     print('Invalid move! Try again!')
+            for possibleAction in myGame.actions(s):
+                if playerInput == possibleAction:
+                    playerMove = playerInput
+                    break
+            if playerMove == 0:
+                print('Invalid move! Try again!')
     
     s = myGame.result(s, playerMove)
 
     # Print board
     myGame.print_board(s)
+    print("Player 1's utility (X): " + str(myGame.utility(s, 1)))
+    print("Player 2's utility (O): " + str(myGame.utility(s, 2)))
 
     endGame = myGame.terminal_test(s)
 
@@ -47,10 +51,6 @@ while not endGame:
     
     if endGame:
         break
-
-    # End of human's turn
-    # Set next player to AI
-    # s[1] = 2
 
     # AI's turn
     # MAGIC AI code
@@ -64,11 +64,9 @@ while not endGame:
     # max_score = Game.board_max_score(boardSize)
     # print("The maximum possible score for a board of size " + str(boardSize) + " is " + str(max_score))
 
-    # End of AI's turn
-    # Set next player to human
-    # s[1] = 1
-
     endGame = myGame.terminal_test(s)
 
 # Print the final board
 myGame.print_board(s)
+print("Player 1's utility (X): " + str(myGame.utility(s, 1)))
+print("Player 2's utility (O): " + str(myGame.utility(s, 2)))
