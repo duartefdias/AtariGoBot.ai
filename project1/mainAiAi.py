@@ -20,6 +20,9 @@ def mainAiAi():
         s = myGame.result(s, AiMove)
         endGame = myGame.terminal_test(s)
 
+        if endGame:
+            break
+
         myGame.print_board(s)
         print("Player 1's utility (X): " + str(myGame.utility(s, 1)))
         print("Player 2's utility (O): " + str(myGame.utility(s, 2)))
@@ -31,5 +34,7 @@ def mainAiAi():
 
     # Print the final board
     myGame.print_board(s)
+    print("Player 1's utility (X): " + str(myGame.utility(s, 1)))
+    print("Player 2's utility (O): " + str(myGame.utility(s, 2)))
 
 mainAiAi()
