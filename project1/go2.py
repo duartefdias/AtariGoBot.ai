@@ -717,8 +717,8 @@ class Group:
 
                             # Check if the nearby enemy group got captured
                             if group.dof == 0:
-                            # Take note of the opponent group that got captured
-                            game.zeroedGroup[opponent-1] = group.id
+                                # Take note of the opponent group that got captured
+                                game.zeroedGroup[opponent-1] = group.id
 
                             # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
                             groupsDofChanged.append(group.id)
