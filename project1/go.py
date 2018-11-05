@@ -11,9 +11,6 @@ from operator import itemgetter
 
 class Game:
     """Atari Go game engine"""
-
-    # Declare the variable corresponding to the real state of the game (not the same as in the AI's simulations)
-    gameState = []
     
     def __init__(self):
         self.boardSize = 0
@@ -83,7 +80,7 @@ class Game:
             return 1
 
         # Search in game for min DOF and sums DOFs of groups for both players
-        for group in reversed(s[game_pos_in_state].groups):
+        for group in s[game_pos_in_state].groups:
             if group.player == 1:
                 if(group.dof < minDofPlayerOne):
                     minDofPlayerOne = group.dof
@@ -114,7 +111,7 @@ class Game:
 
         # Consider the state in case of being the other player playing, without pointing to the same object
         # (use different reference in memory to avoid changing s)
-        otherPlayerState = copy.deepcopy(s)
+        otherPlayerState = Game.copy_state(s)
 
         if s[1] == 1:
             otherPlayerState[1] = 2
@@ -150,15 +147,15 @@ class Game:
     # a is tuple (p, i, j) where p={1, 2} is the player, i=1...n is the row and j=1...n is the column
     def result(self, s, a):
         # Create a copy of the state to prevent changing the original one
-        newState = copy.deepcopy(s)
+        newState = Game.copy_state(s)
 
         # The position of the game variable in the state
         game_pos_in_state = 2 + self.boardSize * self.boardSize
 
         # Convert [row, column] into board index
-        piecePos = (a[1] - 1)*self.boardSize + a[2] - 1
+        piecePos = (a[1] - 1) * self.boardSize + a[2] - 1
 
-        player = s[1]
+        player = newState[1]
 
         # Create a group for the new piece
         newGroup = Group(newState[game_pos_in_state], newState, piecePos, player)
@@ -311,74 +308,6 @@ class Game:
         else:
             # Returns a list of valid moves at state s
             return possiblePlays
-
-    # Sorts list of moves to place best in the beggining and speed up search
-    def sort_actions(self, s):
-        # List of tuples with the actions to be sorted and their corresponding utility
-        # (0.999999 if the opponent could win in his or her next move)
-        sortedActions = []
-
-        player = s[1]
-
-        if player == 1:
-            opponent = 2
-        else:
-            opponent = 1
-
-        # Find the moves that would cause the current player to lose
-        suicidalPlays = self.remove_suicides(s, sort=True)
-
-        # The position of the game variable in the state
-        game_pos_in_state = 2 + self.boardSize * self.boardSize
-
-        # Go through each space of the board
-        for i in range(0, self.boardSize * self.boardSize):
-            row = int(i / self.boardSize) + 1
-            column = i % self.boardSize + 1
-
-            # Check for free spaces in board
-            if s[i+2] == 0:
-                action = (player, row, column)
-
-                if len(suicidalPlays) > 0:
-                    if action == suicidalPlays[0]:
-                        # Remove the suicidal action from the list of suicidal actions
-                        suicidalPlays = suicidalPlays[1:]
-
-                        # Skip this action
-                        continue
-
-                # Simulate the current action
-                simState = copy.deepcopy(s)
-                simState = simState[game_pos_in_state].result(simState, action)
-
-                # Simulate the current action if it was the opponent playing in that space
-                simStateOpponent = copy.deepcopy(s)
-                simStateOpponent[1] = opponent
-                opponentAction = (opponent, row, column)
-                simStateOpponent = simStateOpponent[game_pos_in_state].result(simStateOpponent, opponentAction)
-
-                realPlayerUtility = simState[game_pos_in_state].utility(simState, player)
-
-                # If the opponent could win imediatly, add a big score to occupying that space
-                if realPlayerUtility == 1:
-                    utilityCurrentPlay = 1
-                elif simStateOpponent[game_pos_in_state].utility(simStateOpponent, opponent) == 1:
-                    utilityCurrentPlay = 0.999999
-                else:
-                    utilityCurrentPlay = realPlayerUtility
-
-                # Add the (action, utility) tuple to the list of actions
-                actionUtilityTuple = (action, utilityCurrentPlay)
-                sortedActions.append(actionUtilityTuple)
-            
-        # Sort the action tuples in descending order by the utility score
-        sortedActions = sorted(sortedActions, key=itemgetter(1), reverse=True)
-
-        # Get only the action from the (action, utility) tuple
-        sortedActions = list(map(itemgetter(0), sortedActions))
-
-        return sortedActions
 
     def sort_actions_simple(self, s):
         # List of tuples with the actions to be sorted and their corresponding utility
@@ -631,7 +560,39 @@ class Game:
             return True
         else:
             # Return false if the piece has DOF > 0
-            return False                
+            return False          
+
+    @classmethod
+    def copy_game(self, game):
+        # Initialize an empty game
+        copiedGame = Game()
+
+        # Point to the same board size (never changes)
+        copiedGame.boardSize = game.boardSize
+
+        # Create copies of the lists of the Game attributes
+        copiedGame.freeIds = game.freeIds.copy()
+        copiedGame.groups = game.groups.copy()
+        copiedGame.zeroedGroup = game.zeroedGroup.copy()
+
+        return copiedGame
+
+    @classmethod
+    def copy_state(self, s):
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + s[0] * s[0]
+
+        # Make a copy of the game object
+        copiedGame = Game.copy_game(s[game_pos_in_state])
+
+        # Make a copy of the list
+        copiedState = s.copy()
+
+        # Pass the new game object
+        copiedState[game_pos_in_state] = copiedGame
+
+        return copiedState
+
 
 ##########################################################
 #                                                        #

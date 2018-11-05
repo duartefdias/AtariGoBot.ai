@@ -29,8 +29,8 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
 
             ############# Debug #####################################
             # Print board
-            # game.print_board(state, print_ids=True)
-            # print(state)
+            game.print_board(state, print_ids=True)
+            print(state)
             # if state == [5, 2, 4, 0, 7, 7, 0, 4, 4, 4, 4, 9, 4, 4, 3, 4, 0, 3, 3, 3, 0, 0, 0, 3, 0, 5, 0, state[game_pos_in_state]]:
             #     print("\nOh oh spaghettiohs\n")
             #########################################################
@@ -50,8 +50,8 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
 
             ############# Debug #####################################
             # Print board
-            # game.print_board(state, print_ids=True)
-            # print(state)
+            game.print_board(state, print_ids=True)
+            print(state)
             # if state == [5, 2, 4, 0, 7, 7, 0, 4, 4, 4, 4, 9, 4, 4, 3, 4, 0, 3, 3, 3, 0, 0, 0, 3, 0, 5, 0, state[game_pos_in_state]]:
             #     print("\nOh oh spaghettiohs\n")
             #########################################################
@@ -76,10 +76,10 @@ def alphabeta_cutoff_search(state, game, d=6, cutoff_test=None, eval_fn=None):
 
         ############# Debug #####################################
         # Print board
-        # game.print_board(state, print_ids=True)
-        # print(state)
+        game.print_board(state, print_ids=True)
+        print(state)
         # if state == [5, 2, 4, 0, 7, 7, 0, 4, 4, 4, 4, 9, 4, 4, 3, 4, 0, 3, 3, 3, 0, 0, 0, 3, 0, 5, 0, state[game_pos_in_state]]:
-        #     print("\nOh oh spaghettiohs\n")
+        #     print("\Oh oh spaghettiohs\n")
         #########################################################
 
         v = min_value(game.result(state, a), best_score, beta, 1)
