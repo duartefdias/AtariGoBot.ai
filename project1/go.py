@@ -385,29 +385,38 @@ class Game:
         # (0.999999 if the opponent could win in his or her next move)
         sortedActions = []
 
-        player = s[1]
+        winningPlayExists = False
 
         # The position of the game variable in the state
         game_pos_in_state = 2 + self.boardSize * self.boardSize
 
         # Go through each space of the board
-        for i in range(2, self.boardSize * self.boardSize):
+        for i in range(0, self.boardSize * self.boardSize):
             row = int(i / self.boardSize) + 1
             column = i % self.boardSize + 1
             suicidalPlay = False
 
-            if s[i] == 0:
+            if self.get_board_space(s, i) == 0:
                 neighboursGroupIds = self.get_nearby_board_spaces(s, i)
                 for groupId in neighboursGroupIds:
-                    if s[game_pos_in_state].groups[groupId].dof == 1:
-                        # If it is a winning play
-                        if s[1] != s[game_pos_in_state].groups[groupId].player:
-                            # Insert action at beggining of action list
-                            sortedActions.insert(0, (s[game_pos_in_state].groups[groupId].player, row, column))
+                    for group in s[game_pos_in_state].groups:
+                        if groupId == group.id:
+                            if group.dof == 1:
+                                # If it is a winning play
+                                if s[1] != group.player:
+                                    # Insert action at beggining of action list
+                                    sortedActions.insert(0, (s[1], row, column))
+                                    winningPlayExists = True
+                                    break
 
-                        # If it is a suicidal play it will not be inserted in actions list
-                        else:
-                            suicidalPlay = True
+                                # If it is a suicidal play it will not be inserted in actions list
+                                else:
+                                    if self.get_piece_dof(s, i) == 0:
+                                        suicidalPlay = True
+                                    elif winningPlayExists:
+                                        sortedActions.insert(1, (s[1], row, column))
+                                    else:
+                                        sortedActions.insert(0, (s[1], row, column))
 
                 # Insert every normal/non-suicidal/non-winning possible action to the action list
                 if not suicidalPlay:
@@ -423,20 +432,36 @@ class Game:
         column = spaceId % self.boardSize + 1
 
         # Check if there is a space at the left
-        if row > 1:
-            nearbySpaces.append(self.get_board_space(s, spaceId - 1))
+        if column > 1:
+            leftSpace = self.get_board_space(s, spaceId - 1)
+
+            # Only add if it's not empty and it's an already seen group
+            if leftSpace > 2:
+                nearbySpaces.append(leftSpace)
 
         # Check if there is a space at the right
-        if row < self.boardSize:
-            nearbySpaces.append(self.get_board_space(s, spaceId + 1))
+        if column < self.boardSize:
+            rightSpace = self.get_board_space(s, spaceId + 1)
+
+            # Only add if it's not empty and it's an already seen group
+            if rightSpace > 2:
+                nearbySpaces.append(rightSpace)
 
         # Check if there is a space at above
-        if column > 1:
-            nearbySpaces.append(self.get_board_space(s, spaceId - self.boardSize))
+        if row > 1:
+            aboveSpace = self.get_board_space(s, spaceId - self.boardSize)
+
+            # Only add if it's not empty and it's an already seen group
+            if aboveSpace > 2:
+                nearbySpaces.append(aboveSpace)
 
         # Check if there is a space at the bellow
-        if column < self.boardSize:
-            nearbySpaces.append(self.get_board_space(s, spaceId + self.boardSize))
+        if row < self.boardSize:
+            bellowSpace = self.get_board_space(s, spaceId + self.boardSize)
+
+            # Only add if it's not empty and it's an already seen group
+            if bellowSpace > 2:
+                nearbySpaces.append(bellowSpace)
 
         return nearbySpaces
 
@@ -525,6 +550,47 @@ class Game:
                     print('\n')
 
         print(s)
+
+    # Get the degrees of freedom of one piece
+    def get_piece_dof(self, state, piece):
+        # Maximum possible degrees of freedom for a single piece        
+        dof = 4
+        piece_row = int(piece / self.boardSize) + 1
+        piece_column = piece % self.boardSize + 1
+
+        # Check if the space at the right of the piece exists
+        if piece_column < self.boardSize:
+            # Check if the space at the right of the piece is occupied
+            if self.get_board_space(state, piece + 1) != 0:
+                dof -= 1
+        else:
+            dof -= 1
+
+        # Check if the space at the left of the piece exists
+        if piece_column > 1:
+            # Check if the space at the left of the piece is occupied
+            if self.get_board_space(state, piece - 1) != 0:
+                dof -= 1
+        else:
+            dof -= 1
+
+        # Check if the space above the piece exists
+        if piece_row > 1:
+            # Check if the space above the piece is occupied
+            if self.get_board_space(state, piece - self.boardSize) != 0:
+                dof -= 1
+        else:
+            dof -= 1
+
+        # Check if the space bellow the piece exists
+        if piece_row < self.boardSize:
+            # Check if the space bellow the piece is occupied
+            if self.get_board_space(state, piece + self.boardSize) != 0:
+                dof -= 1
+        else:
+            dof -= 1
+
+        return dof
 
 
 ##########################################################
