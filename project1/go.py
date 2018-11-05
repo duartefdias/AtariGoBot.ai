@@ -414,7 +414,7 @@ class Game:
                                 # If it is a suicidal play it will not be inserted in actions list
                                 else:
                                     # Suicidal play
-                                    if self.get_piece_dof(s, i) == 0:
+                                    if s[game_pos_in_state].get_piece_dof(s, i) == 0:
                                         suicidalPlay = True
                                     # Auto-defense with already existing winning play
                                     elif winningPlayExists:
@@ -426,7 +426,7 @@ class Game:
                                         alreadyPlayed = True
 
                 # Insert every normal/non-suicidal/non-winning possible action to the action list
-                if not suicidalPlay and not alreadyPlayed:
+                if not suicidalPlay and not alreadyPlayed and not s[game_pos_in_state].is_suicidal_single_piece(s, i):
                     sortedActions.append((s[1], row, column))
 
         return sortedActions
@@ -599,6 +599,28 @@ class Game:
 
         return dof
 
+    # Check if the piece being added wont join any group and would have 0 DOF
+    # Called in sort_actions_simple()
+    def is_suicidal_single_piece(self, s, spaceId):
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + self.boardSize * self.boardSize
+
+        neighboursGroupIds = s[game_pos_in_state].get_nearby_board_spaces(s, spaceId)
+        player = s[1]
+        
+        # Search neighbouring groups
+        for groupId in neighboursGroupIds:
+            # Check if there's an allied group nearby
+            if groupId % 2 == player % 2:
+                # Return false if there's any allied group nearby
+                return False
+
+        if s[game_pos_in_state].get_piece_dof(s, spaceId) == 0:
+            # Return true if there's no nearby allied groups and the piece has 0 DOF
+            return True
+        else:
+            # Return false if the piece has DOF > 0
+            return False                
 
 ##########################################################
 #                                                        #
