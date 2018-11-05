@@ -158,7 +158,7 @@ class Game:
         player = newState[1]
 
         # Create a group for the new piece
-        newGroup = Group(newState[game_pos_in_state], newState, piecePos, player)
+        newGroup = Group.create_group(newState[game_pos_in_state], newState, piecePos, player)
 
         # Add the piece's group ID to the state representation
         newState[piecePos + 2] = newGroup.id
@@ -212,7 +212,7 @@ class Game:
                 player = s[piecePos + 2]
 
                 # Create a group for the new piece
-                newPiece = Group(self, s, piecePos, player)
+                newPiece = Group.create_group(self, s, piecePos, player)
 
                 # Add the piece's group ID to the state representation
                 s[piecePos + 2] = newPiece.id
@@ -572,8 +572,14 @@ class Game:
 
         # Create copies of the lists of the Game attributes
         copiedGame.freeIds = game.freeIds.copy()
-        copiedGame.groups = game.groups.copy()
         copiedGame.zeroedGroup = game.zeroedGroup.copy()
+
+        for group in copiedGame.groups:
+            # Create a copy of each group
+            copiedGroup = Group.copy_group(group)
+
+            # Add each copied group to the list of groups of the copied game
+            copiedGame.groups.append(copiedGroup)
 
         return copiedGame
 
@@ -603,25 +609,40 @@ class Game:
 ##########################################################
 
 class Group:
-    def __init__(self, game, state, piece, player):
+    def __init__(self):
         # Degrees of freedom
-        self.dof = self.get_piece_dof(game, state, piece)
+        self.dof = None
 
         # Set the corresponding player
-        self.player = player
+        self.player = None
 
         # Get the unique ID of the group 
-        self.id = game.freeIds[player-1][0]
+        self.id = None
+
+    @classmethod
+    def create_group(self, game, state, piece, player):
+        newGroup = Group()
+
+        # Degrees of freedom
+        newGroup.dof = newGroup.get_piece_dof(game, state, piece)
+
+        # Set the corresponding player
+        newGroup.player = player
+
+        # Get the unique ID of the group 
+        newGroup.id = game.freeIds[player-1][0]
 
         # Remove the newly assigned group ID from the list of available group IDs
         if len(game.freeIds[player-1]) > 1: 
             game.freeIds[player-1] = game.freeIds[player-1][1:]
         else:
             # If the new ID is the biggest one available, add the next possible ID
-            game.freeIds[player-1][0] = self.id + 2
+            game.freeIds[player-1][0] = newGroup.id + 2
         
         # Add the new group to the game's list of groups
-        game.groups.append(self)
+        game.groups.append(newGroup)
+
+        return newGroup
 
     # Joins two groups and returns the new state and joined group
     def join_group(self, group, game, state, player):
@@ -919,3 +940,15 @@ class Group:
                             groupsDofChanged.append(group.id)
                             break
         return state
+
+    @classmethod
+    def copy_group(self, group):
+        # Initialize copied group
+        copiedGroup = Group()
+
+        # Pass the attributes of the group to copy
+        copiedGroup.dof = group.dof
+        copiedGroup.player = group.player
+        copiedGroup.id = group.id
+
+        return copiedGroup
