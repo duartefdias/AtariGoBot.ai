@@ -398,28 +398,35 @@ class Game:
 
             if self.get_board_space(s, i) == 0:
                 neighboursGroupIds = self.get_nearby_board_spaces(s, i)
+                alreadyPlayed = False
                 for groupId in neighboursGroupIds:
                     for group in s[game_pos_in_state].groups:
                         if groupId == group.id:
-                            if group.dof == 1:
-                                # If it is a winning play
+                            # If it is a winning play
+                            if group.dof == 1: 
                                 if s[1] != group.player:
                                     # Insert action at beggining of action list
                                     sortedActions.insert(0, (s[1], row, column))
                                     winningPlayExists = True
+                                    alreadyPlayed = True
                                     break
 
                                 # If it is a suicidal play it will not be inserted in actions list
                                 else:
+                                    # Suicidal play
                                     if self.get_piece_dof(s, i) == 0:
                                         suicidalPlay = True
+                                    # Auto-defense with already existing winning play
                                     elif winningPlayExists:
                                         sortedActions.insert(1, (s[1], row, column))
+                                        alreadyPlayed = True
+                                    # Auto-defense without already existing winning play
                                     else:
                                         sortedActions.insert(0, (s[1], row, column))
+                                        alreadyPlayed = True
 
                 # Insert every normal/non-suicidal/non-winning possible action to the action list
-                if not suicidalPlay:
+                if not suicidalPlay and not alreadyPlayed:
                     sortedActions.append((s[1], row, column))
 
         return sortedActions
