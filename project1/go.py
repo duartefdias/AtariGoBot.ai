@@ -144,19 +144,7 @@ class Game:
             return -score
 
     def actions(self, s):
-            # Check if the state corresponds to the real one or to a simulation
-            if self.get_object_reference(s) == self.get_object_reference(Game.gameState):
-                ############# Debug #####################################
-                # actionsList = self.sort_actions(s)
-                # print("Sorted actions: " str(actionsList))
-                # return actionsList
-                #########################################################
-
-                # Sort the actions by the utility given in the first move
-                return self.sort_actions(s)
-            else:
-                # Just remove the suicidal moves
-                return self.remove_suicides(s)
+            return self.sort_actions_simple(s)
 
     # Returns the sucessor game state after playing move a at state s
     # a is tuple (p, i, j) where p={1, 2} is the player, i=1...n is the row and j=1...n is the column
@@ -391,6 +379,66 @@ class Game:
         sortedActions = list(map(itemgetter(0), sortedActions))
 
         return sortedActions
+
+    def sort_actions_simple(self, s):
+        # List of tuples with the actions to be sorted and their corresponding utility
+        # (0.999999 if the opponent could win in his or her next move)
+        sortedActions = []
+
+        player = s[1]
+
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + self.boardSize * self.boardSize
+
+        # Go through each space of the board
+        for i in range(2, self.boardSize * self.boardSize):
+            row = int(i / self.boardSize) + 1
+            column = i % self.boardSize + 1
+            suicidalPlay = False
+
+            if s[i] == 0:
+                neighboursGroupIds = self.get_nearby_board_spaces(s, i)
+                for groupId in neighboursGroupIds:
+                    if s[game_pos_in_state].groups[groupId].dof == 1:
+                        # If it is a winning play
+                        if s[1] != s[game_pos_in_state].groups[groupId].player:
+                            # Insert action at beggining of action list
+                            sortedActions.insert(0, (s[game_pos_in_state].groups[groupId].player, row, column))
+
+                        # If it is a suicidal play it will not be inserted in actions list
+                        else:
+                            suicidalPlay = True
+
+                # Insert every normal/non-suicidal/non-winning possible action to the action list
+                if not suicidalPlay:
+                    sortedActions.append((s[1], row, column))
+
+        return sortedActions
+
+    # Get a list of all the neighbour pieces (not counting on diagonals)
+    def get_nearby_board_spaces(self, s, spaceId):
+        nearbySpaces = []
+
+        row = int(spaceId / self.boardSize) + 1
+        column = spaceId % self.boardSize + 1
+
+        # Check if there is a space at the left
+        if row > 1:
+            nearbySpaces.append(self.get_board_space(s, spaceId - 1))
+
+        # Check if there is a space at the right
+        if row < self.boardSize:
+            nearbySpaces.append(self.get_board_space(s, spaceId + 1))
+
+        # Check if there is a space at above
+        if column > 1:
+            nearbySpaces.append(self.get_board_space(s, spaceId - self.boardSize))
+
+        # Check if there is a space at the bellow
+        if column < self.boardSize:
+            nearbySpaces.append(self.get_board_space(s, spaceId + self.boardSize))
+
+        return nearbySpaces
 
     # Function that calculates the individual score of each player, without considering the opponent
     @classmethod
