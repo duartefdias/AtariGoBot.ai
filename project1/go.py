@@ -21,7 +21,7 @@ class Game:
         self.freeIds = [[3], [4]]
 
         # Initialize the groups list as empty
-        self.groups = []
+        self.groups = {}
 
         # IDs of groups that have been captured (DOF reduced to 0) of each player
         # zeroedGroup[0] is the ID of a player 1's group that has been captured by player 2
@@ -44,8 +44,8 @@ class Game:
                 return True
 
         # Tests if game ends because DOF = 0 of either players
-        for group in s[game_pos_in_state].groups:
-            if group.dof == 0:
+        for key in s[game_pos_in_state].groups:
+            if s[game_pos_in_state].groups[key].dof == 0:
                 return True
 
         # Tests if there are no more possible actions (draw)
@@ -80,7 +80,9 @@ class Game:
             return 1
 
         # Search in game for min DOF and sums DOFs of groups for both players
-        for group in s[game_pos_in_state].groups:
+        for key in s[game_pos_in_state].groups:
+            group = s[game_pos_in_state].groups[key]
+
             if group.player == 1:
                 if(group.dof < minDofPlayerOne):
                     minDofPlayerOne = group.dof
@@ -141,7 +143,65 @@ class Game:
             return -score
 
     def actions(self, s):
-            return self.sort_actions_simple(s)
+        # List of tuples with the actions to be sorted and their corresponding utility
+        sortedActions = []
+
+        winningPlayExists = False
+
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + self.boardSize * self.boardSize
+
+        # Go through each space of the board
+        for i in range(0, self.boardSize * self.boardSize):
+            row = int(i / self.boardSize) + 1
+            column = i % self.boardSize + 1
+
+            # Flag to check if the action is suicidal
+            suicidalPlay = False
+
+            # Flag to check if there's any allied group in the neighbourhood with more than 1 DOF
+            otherAlliedNeighbourMoreThanOneDOF = False
+
+            if self.get_board_space(s, i) == 0:
+                neighboursGroupIds = self.get_nearby_board_spaces(s, i)
+                alreadyPlayed = False
+                for groupId in neighboursGroupIds:
+                    group = s[game_pos_in_state].groups[groupId]
+                            
+                    # If it is a winning play
+                    if group.dof == 1: 
+                        if s[1] != group.player:
+                            # Insert action at beggining of action list
+                            sortedActions.insert(0, (s[1], row, column))
+                            winningPlayExists = True
+                            alreadyPlayed = True
+                            break
+
+                        # If it is a suicidal play it will not be inserted in actions list
+                        else:
+                            # Suicidal play
+                            if s[game_pos_in_state].get_piece_dof(s, i) == 0:
+                                suicidalPlay = True
+                            # Auto-defense with already existing winning play
+                            elif winningPlayExists:
+                                sortedActions.insert(1, (s[1], row, column))
+                                alreadyPlayed = True
+                            # Auto-defense without already existing winning play
+                            else:
+                                sortedActions.insert(0, (s[1], row, column))
+                                alreadyPlayed = True
+
+                    else:
+                        if s[1] == group.player:
+                            otherAlliedNeighbourMoreThanOneDOF = True
+
+                suicidalPlay = suicidalPlay and not otherAlliedNeighbourMoreThanOneDOF
+
+                # Insert every normal/non-suicidal/non-winning possible action to the action list
+                if not suicidalPlay and not alreadyPlayed and not s[game_pos_in_state].is_suicidal_single_piece(s, i):
+                    sortedActions.append((s[1], row, column))
+
+        return sortedActions
 
     # Returns the sucessor game state after playing move a at state s
     # a is tuple (p, i, j) where p={1, 2} is the player, i=1...n is the row and j=1...n is the column
@@ -283,16 +343,16 @@ class Game:
                                 # Simulate the current action
                                 simState = s[game_pos_in_state].result(s, (s[1], row, column))
                             
-                                for group in simState[game_pos_in_state].groups:
-                                    # Search for the group of the new piece
-                                    if group.id == simState[game_pos_in_state].get_board_space(simState, i):
-                                        if group.dof == 0:
-                                            isSuicidal = True
+                                group = simState[game_pos_in_state].groups[simState[game_pos_in_state].get_board_space(simState, i)]
+                                    
+                                # Search for the group of the new piece
+                                if group.dof == 0:
+                                    isSuicidal = True
 
-                                    # Check if there's an enemy group that got captured
-                                    if group.id % 2 != player % 2:
-                                        if group.dof == 0:
-                                            isCapture = True
+                                # Check if there's an enemy group that got captured
+                                if group.id % 2 != player % 2:
+                                    if group.dof == 0:
+                                        isCapture = True
 
                 # If the actions are being sorted, return the suicidal moves
                 if isSuicidal and not isCapture and sort:
@@ -308,68 +368,6 @@ class Game:
         else:
             # Returns a list of valid moves at state s
             return possiblePlays
-
-    def sort_actions_simple(self, s):
-        # List of tuples with the actions to be sorted and their corresponding utility
-        # (0.999999 if the opponent could win in his or her next move)
-        sortedActions = []
-
-        winningPlayExists = False
-
-        # The position of the game variable in the state
-        game_pos_in_state = 2 + self.boardSize * self.boardSize
-
-        # Go through each space of the board
-        for i in range(0, self.boardSize * self.boardSize):
-            row = int(i / self.boardSize) + 1
-            column = i % self.boardSize + 1
-
-            # Flag to check if the action is suicidal
-            suicidalPlay = False
-
-            # Flag to check if there's any allied group in the neighbourhood with more than 1 DOF
-            otherAlliedNeighbourMoreThanOneDOF = False
-
-            if self.get_board_space(s, i) == 0:
-                neighboursGroupIds = self.get_nearby_board_spaces(s, i)
-                alreadyPlayed = False
-                for groupId in neighboursGroupIds:
-                    for group in s[game_pos_in_state].groups:
-                        if groupId == group.id:
-                            # If it is a winning play
-                            if group.dof == 1: 
-                                if s[1] != group.player:
-                                    # Insert action at beggining of action list
-                                    sortedActions.insert(0, (s[1], row, column))
-                                    winningPlayExists = True
-                                    alreadyPlayed = True
-                                    break
-
-                                # If it is a suicidal play it will not be inserted in actions list
-                                else:
-                                    # Suicidal play
-                                    if s[game_pos_in_state].get_piece_dof(s, i) == 0:
-                                        suicidalPlay = True
-                                    # Auto-defense with already existing winning play
-                                    elif winningPlayExists:
-                                        sortedActions.insert(1, (s[1], row, column))
-                                        alreadyPlayed = True
-                                    # Auto-defense without already existing winning play
-                                    else:
-                                        sortedActions.insert(0, (s[1], row, column))
-                                        alreadyPlayed = True
-
-                            else:
-                                if s[1] == group.player:
-                                    otherAlliedNeighbourMoreThanOneDOF = True
-
-                suicidalPlay = suicidalPlay and not otherAlliedNeighbourMoreThanOneDOF
-
-                # Insert every normal/non-suicidal/non-winning possible action to the action list
-                if not suicidalPlay and not alreadyPlayed and not s[game_pos_in_state].is_suicidal_single_piece(s, i):
-                    sortedActions.append((s[1], row, column))
-
-        return sortedActions
 
     # Get a list of all the neighbour pieces (not counting on diagonals)
     def get_nearby_board_spaces(self, s, spaceId):
@@ -416,8 +414,8 @@ class Game:
     @classmethod
     def calc_solo_score(self, minDofPlayer, avgDofPlayer):
         # (weights TBD)
-        weightMinPlayer = 0.8
-        weightAvgPlayer = 0.2
+        weightMinPlayer = 0.65
+        weightAvgPlayer = 0.35
 
         # Applying heuristic to one player
         scorePlayer = weightMinPlayer * minDofPlayer + weightAvgPlayer * avgDofPlayer
@@ -574,12 +572,12 @@ class Game:
         copiedGame.freeIds = game.freeIds.copy()
         copiedGame.zeroedGroup = game.zeroedGroup.copy()
 
-        for group in game.groups:
+        for key in game.groups:
             # Create a copy of each group
-            copiedGroup = Group.copy_group(group)
+            copiedGroup = Group.copy_group(game.groups[key])
 
             # Add each copied group to the list of groups of the copied game
-            copiedGame.groups.append(copiedGroup)
+            copiedGame.groups[copiedGroup.id] = copiedGroup
 
         return copiedGame
 
@@ -640,7 +638,7 @@ class Group:
             game.freeIds[player-1][0] = newGroup.id + 2
         
         # Add the new group to the game's list of groups
-        game.groups.append(newGroup)
+        game.groups[newGroup.id] = newGroup
 
         return newGroup
 
@@ -663,10 +661,7 @@ class Group:
         old_id = self.id
 
         # Delete the old group
-        for i in range(0, game.groups.__len__()):
-            if game.groups[i].id == old_id:
-                del game.groups[i]
-                break
+        del game.groups[old_id]
 
         # Add the deleted group's ID to the top of the list of the player's free IDs
         game.freeIds[player-1] = [old_id] + game.freeIds[player-1]
@@ -802,32 +797,33 @@ class Group:
             # Check if the space at the right of the piece is occupied
             if game.get_board_space(state, piece + 1) != 0:
                 # Check if the space at the right of the piece is occupied with an allied piece
-                if game.get_board_space(state, piece + 1) % 2 == (self.player % 2):
+                if game.get_board_space(state, piece + 1) % 2 == (self.player % 2) \
+                   and game.get_board_space(state, piece + 1) > 2:
                     # Join group of the same player
-                    for group in game.groups:
-                        if group.id == game.get_board_space(state, piece + 1):
-                            # Join the groups
-                            [state, real_group] = real_group.join_group(group, game, state, player)
+                    group = game.groups[game.get_board_space(state, piece + 1)]
+                    
+                    # Join the groups
+                    [state, real_group] = real_group.join_group(group, game, state, player)
 
-                            # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
-                            groupsJoined.append(group.id)
-                            break
+                    # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
+                    groupsJoined.append(group.id)
+                    
                 # Check if right side has different "parity" and it's not loading the board 
                 elif game.get_board_space(state, piece + 1) % 2 != (self.player % 2) and not board_init:
                     # Subtract a degree of freedom from the adjacent opponent group
-                    for group in game.groups:
-                        if group.id == game.get_board_space(state, piece + 1):
-                            # Decrease the adjacent group's degrees of freedom
-                            group.dof -= 1
+                    group = game.groups[game.get_board_space(state, piece + 1)]
+                    
+                    # Decrease the adjacent group's degrees of freedom
+                    group.dof -= 1
 
-                            # Check if the nearby enemy group got captured
-                            if group.dof == 0:
-                                # Take note of the opponent group that got captured
-                                game.zeroedGroup[opponent-1] = group.id
+                    # Check if the nearby enemy group got captured
+                    if group.dof == 0:
+                        # Take note of the opponent group that got captured
+                        game.zeroedGroup[opponent-1] = group.id
 
-                            # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
-                            groupsDofChanged.append(group.id)
-                            break
+                    # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
+                    groupsDofChanged.append(group.id)
+                    
         # Check if the space at the left of the piece exists
         if piece_column > 1:
             # Check if the space at the left of the piece is occupied
@@ -835,16 +831,17 @@ class Group:
                 # Check if the piece at the left is of the same player
                 # and was not previously joined in the same group
                 if game.get_board_space(state, piece - 1) % 2 == (self.player % 2) \
-                   and not game.get_board_space(state, piece - 1) in groupsJoined: 
+                   and not game.get_board_space(state, piece - 1) in groupsJoined \
+                   and game.get_board_space(state, piece - 1) > 2: 
                     # Join group of the same player
-                    for group in game.groups:
-                        if group.id == game.get_board_space(state, piece - 1):                  
-                            # Join the groups
-                            [state, real_group] = real_group.join_group(group, game, state, player)
+                    group = game.groups[game.get_board_space(state, piece - 1)]            
+                            
+                    # Join the groups
+                    [state, real_group] = real_group.join_group(group, game, state, player)
 
-                            # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
-                            groupsJoined.append(group.id)
-                            break
+                    # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
+                    groupsJoined.append(group.id)
+
                 # Check if left side has different "parity", 
                 # it's not loading the board 
                 # and the group wasn't previously affected
@@ -852,19 +849,19 @@ class Group:
                      and not board_init \
                      and not game.get_board_space(state, piece - 1) in groupsDofChanged:
                     # Subtract a degree of freedom from the adjacent opponent group
-                    for group in game.groups:
-                        if group.id == game.get_board_space(state, piece - 1):
-                            # Decrease the adjacent group's degrees of freedom
-                            group.dof -= 1
+                    group = game.groups[game.get_board_space(state, piece - 1)]
 
-                            # Check if the nearby enemy group got captured
-                            if group.dof == 0:
-                                # Take note of the opponent group that got captured
-                                game.zeroedGroup[opponent-1] = group.id
+                    # Decrease the adjacent group's degrees of freedom
+                    group.dof -= 1
 
-                            # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
-                            groupsDofChanged.append(group.id)
-                            break
+                    # Check if the nearby enemy group got captured
+                    if group.dof == 0:
+                        # Take note of the opponent group that got captured
+                        game.zeroedGroup[opponent-1] = group.id
+
+                    # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
+                    groupsDofChanged.append(group.id)
+                    
         # Check if the space above the piece exists
         if piece_row > 1:
             # Check if the space above the piece is occupied
@@ -872,16 +869,17 @@ class Group:
                 # Check if the piece above is of the same player
                 # and was not previously joined in the same group
                 if game.get_board_space(state, piece - game.boardSize) % 2 == (self.player % 2) \
-                   and not game.get_board_space(state, piece - game.boardSize) in groupsJoined: 
+                   and not game.get_board_space(state, piece - game.boardSize) in groupsJoined \
+                   and game.get_board_space(state, piece - game.boardSize) > 2: 
                     # Join group of the same player
-                    for group in game.groups:
-                        if group.id == game.get_board_space(state, piece - game.boardSize):
-                            # Join the groups
-                            [state, real_group] = real_group.join_group(group, game, state, player)
+                    group = game.groups[game.get_board_space(state, piece - game.boardSize)]
+                            
+                    # Join the groups
+                    [state, real_group] = real_group.join_group(group, game, state, player)
 
-                            # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
-                            groupsJoined.append(group.id)
-                            break
+                    # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
+                    groupsJoined.append(group.id)
+                    
                 # Check if the piece above has different "parity", 
                 # it's not loading the board 
                 # and the group wasn't previously affected
@@ -889,19 +887,19 @@ class Group:
                      and not board_init \
                      and not game.get_board_space(state, piece - game.boardSize) in groupsDofChanged:
                     # Subtract a degree of freedom from the adjacent opponent group
-                    for group in game.groups:
-                        if group.id == game.get_board_space(state, piece - game.boardSize):
-                            # Decrease the adjacent group's degrees of freedom
-                            group.dof -= 1
+                    group = game.groups[game.get_board_space(state, piece - game.boardSize)]
 
-                            # Check if the nearby enemy group got captured
-                            if group.dof == 0:
-                                # Take note of the opponent group that got captured
-                                game.zeroedGroup[opponent-1] = group.id
+                    # Decrease the adjacent group's degrees of freedom
+                    group.dof -= 1
 
-                            # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
-                            groupsDofChanged.append(group.id)
-                            break
+                    # Check if the nearby enemy group got captured
+                    if group.dof == 0:
+                        # Take note of the opponent group that got captured
+                        game.zeroedGroup[opponent-1] = group.id
+
+                    # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
+                    groupsDofChanged.append(group.id)
+                    
         # Check if the space bellow the piece exists
         if piece_row < game.boardSize:
             # Check if the space bellow the piece is occupied
@@ -909,16 +907,17 @@ class Group:
                 # Check if the piece bellow is of the same player
                 # and was not previously joined in the same group
                 if game.get_board_space(state, piece + game.boardSize) % 2 == (self.player % 2) \
-                   and not game.get_board_space(state, piece + game.boardSize) in groupsJoined: 
+                   and not game.get_board_space(state, piece + game.boardSize) in groupsJoined \
+                   and game.get_board_space(state, piece + game.boardSize) > 2: 
                     # Join group of the same player
-                    for group in game.groups:
-                        if group.id == game.get_board_space(state, piece + game.boardSize):
-                            # Join the groups
-                            [state, real_group] = real_group.join_group(group, game, state, player)
+                    group = game.groups[game.get_board_space(state, piece + game.boardSize)]
 
-                            # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
-                            groupsJoined.append(group.id)
-                            break
+                    # Join the groups
+                    [state, real_group] = real_group.join_group(group, game, state, player)
+
+                    # Add the joined group ID to the list of joined groups (avoid redundant and dangerous rejoins)
+                    groupsJoined.append(group.id)
+                    
                 # Check if the piece bellow has different "parity", 
                 # it's not loading the board 
                 # and the group wasn't previously affected
@@ -926,19 +925,19 @@ class Group:
                      and not board_init \
                      and not game.get_board_space(state, piece + game.boardSize) in groupsDofChanged:
                     # Subtract a degree of freedom from the adjacent opponent group
-                    for group in game.groups:
-                        if group.id == game.get_board_space(state, piece + game.boardSize):
-                            # Decrease the adjacent group's degrees of freedom
-                            group.dof -= 1
+                    group = game.groups[game.get_board_space(state, piece + game.boardSize)]
 
-                            # Check if the nearby enemy group got captured
-                            if group.dof == 0:
-                                # Take note of the opponent group that got captured
-                                game.zeroedGroup[opponent-1] = group.id
+                    # Decrease the adjacent group's degrees of freedom
+                    group.dof -= 1
 
-                            # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
-                            groupsDofChanged.append(group.id)
-                            break
+                    # Check if the nearby enemy group got captured
+                    if group.dof == 0:
+                        # Take note of the opponent group that got captured
+                        game.zeroedGroup[opponent-1] = group.id
+
+                    # Add the affected groups ID to the list of affected groups (avoid decreasing DOF again)
+                    groupsDofChanged.append(group.id)
+                    
         return state
 
     @classmethod
