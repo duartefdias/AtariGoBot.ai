@@ -11,9 +11,6 @@ from operator import itemgetter
 
 class Game:
     """Atari Go game engine"""
-
-    # Declare the variable corresponding to the real state of the game (not the same as in the AI's simulations)
-    gameState = []
     
     def __init__(self):
         self.boardSize = 0
@@ -83,7 +80,7 @@ class Game:
             return 1
 
         # Search in game for min DOF and sums DOFs of groups for both players
-        for group in reversed(s[game_pos_in_state].groups):
+        for group in s[game_pos_in_state].groups:
             if group.player == 1:
                 if(group.dof < minDofPlayerOne):
                     minDofPlayerOne = group.dof
@@ -114,7 +111,7 @@ class Game:
 
         # Consider the state in case of being the other player playing, without pointing to the same object
         # (use different reference in memory to avoid changing s)
-        otherPlayerState = copy.deepcopy(s)
+        otherPlayerState = Game.copy_state(s)
 
         if s[1] == 1:
             otherPlayerState[1] = 2
@@ -144,36 +141,24 @@ class Game:
             return -score
 
     def actions(self, s):
-            # Check if the state corresponds to the real one or to a simulation
-            if self.get_object_reference(s) == self.get_object_reference(Game.gameState):
-                ############# Debug #####################################
-                # actionsList = self.sort_actions(s)
-                # print("Sorted actions: " str(actionsList))
-                # return actionsList
-                #########################################################
-
-                # Sort the actions by the utility given in the first move
-                return self.sort_actions(s)
-            else:
-                # Just remove the suicidal moves
-                return self.remove_suicides(s)
+            return self.sort_actions_simple(s)
 
     # Returns the sucessor game state after playing move a at state s
     # a is tuple (p, i, j) where p={1, 2} is the player, i=1...n is the row and j=1...n is the column
     def result(self, s, a):
         # Create a copy of the state to prevent changing the original one
-        newState = copy.deepcopy(s)
+        newState = Game.copy_state(s)
 
         # The position of the game variable in the state
         game_pos_in_state = 2 + self.boardSize * self.boardSize
 
         # Convert [row, column] into board index
-        piecePos = (a[1] - 1)*self.boardSize + a[2] - 1
+        piecePos = (a[1] - 1) * self.boardSize + a[2] - 1
 
-        player = s[1]
+        player = newState[1]
 
         # Create a group for the new piece
-        newGroup = Group(newState[game_pos_in_state], newState, piecePos, player)
+        newGroup = Group.create_group(newState[game_pos_in_state], newState, piecePos, player)
 
         # Add the piece's group ID to the state representation
         newState[piecePos + 2] = newGroup.id
@@ -227,7 +212,7 @@ class Game:
                 player = s[piecePos + 2]
 
                 # Create a group for the new piece
-                newPiece = Group(self, s, piecePos, player)
+                newPiece = Group.create_group(self, s, piecePos, player)
 
                 # Add the piece's group ID to the state representation
                 s[piecePos + 2] = newPiece.id
@@ -324,21 +309,12 @@ class Game:
             # Returns a list of valid moves at state s
             return possiblePlays
 
-    # Sorts list of moves to place best in the beggining and speed up search
-    def sort_actions(self, s):
+    def sort_actions_simple(self, s):
         # List of tuples with the actions to be sorted and their corresponding utility
         # (0.999999 if the opponent could win in his or her next move)
         sortedActions = []
 
-        player = s[1]
-
-        if player == 1:
-            opponent = 2
-        else:
-            opponent = 1
-
-        # Find the moves that would cause the current player to lose
-        suicidalPlays = self.remove_suicides(s, sort=True)
+        winningPlayExists = False
 
         # The position of the game variable in the state
         game_pos_in_state = 2 + self.boardSize * self.boardSize
@@ -348,49 +324,93 @@ class Game:
             row = int(i / self.boardSize) + 1
             column = i % self.boardSize + 1
 
-            # Check for free spaces in board
-            if s[i+2] == 0:
-                action = (player, row, column)
+            # Flag to check if the action is suicidal
+            suicidalPlay = False
 
-                if len(suicidalPlays) > 0:
-                    if action == suicidalPlays[0]:
-                        # Remove the suicidal action from the list of suicidal actions
-                        suicidalPlays = suicidalPlays[1:]
+            # Flag to check if there's any allied group in the neighbourhood with more than 1 DOF
+            otherAlliedNeighbourMoreThanOneDOF = False
 
-                        # Skip this action
-                        continue
+            if self.get_board_space(s, i) == 0:
+                neighboursGroupIds = self.get_nearby_board_spaces(s, i)
+                alreadyPlayed = False
+                for groupId in neighboursGroupIds:
+                    for group in s[game_pos_in_state].groups:
+                        if groupId == group.id:
+                            # If it is a winning play
+                            if group.dof == 1: 
+                                if s[1] != group.player:
+                                    # Insert action at beggining of action list
+                                    sortedActions.insert(0, (s[1], row, column))
+                                    winningPlayExists = True
+                                    alreadyPlayed = True
+                                    break
 
-                # Simulate the current action
-                simState = copy.deepcopy(s)
-                simState = simState[game_pos_in_state].result(simState, action)
+                                # If it is a suicidal play it will not be inserted in actions list
+                                else:
+                                    # Suicidal play
+                                    if s[game_pos_in_state].get_piece_dof(s, i) == 0:
+                                        suicidalPlay = True
+                                    # Auto-defense with already existing winning play
+                                    elif winningPlayExists:
+                                        sortedActions.insert(1, (s[1], row, column))
+                                        alreadyPlayed = True
+                                    # Auto-defense without already existing winning play
+                                    else:
+                                        sortedActions.insert(0, (s[1], row, column))
+                                        alreadyPlayed = True
 
-                # Simulate the current action if it was the opponent playing in that space
-                simStateOpponent = copy.deepcopy(s)
-                simStateOpponent[1] = opponent
-                opponentAction = (opponent, row, column)
-                simStateOpponent = simStateOpponent[game_pos_in_state].result(simStateOpponent, opponentAction)
+                            else:
+                                if s[1] == group.player:
+                                    otherAlliedNeighbourMoreThanOneDOF = True
 
-                realPlayerUtility = simState[game_pos_in_state].utility(simState, player)
+                suicidalPlay = suicidalPlay and not otherAlliedNeighbourMoreThanOneDOF
 
-                # If the opponent could win imediatly, add a big score to occupying that space
-                if realPlayerUtility == 1:
-                    utilityCurrentPlay = 1
-                elif simStateOpponent[game_pos_in_state].utility(simStateOpponent, opponent) == 1:
-                    utilityCurrentPlay = 0.999999
-                else:
-                    utilityCurrentPlay = realPlayerUtility
-
-                # Add the (action, utility) tuple to the list of actions
-                actionUtilityTuple = (action, utilityCurrentPlay)
-                sortedActions.append(actionUtilityTuple)
-            
-        # Sort the action tuples in descending order by the utility score
-        sortedActions = sorted(sortedActions, key=itemgetter(1), reverse=True)
-
-        # Get only the action from the (action, utility) tuple
-        sortedActions = list(map(itemgetter(0), sortedActions))
+                # Insert every normal/non-suicidal/non-winning possible action to the action list
+                if not suicidalPlay and not alreadyPlayed and not s[game_pos_in_state].is_suicidal_single_piece(s, i):
+                    sortedActions.append((s[1], row, column))
 
         return sortedActions
+
+    # Get a list of all the neighbour pieces (not counting on diagonals)
+    def get_nearby_board_spaces(self, s, spaceId):
+        nearbySpaces = []
+
+        row = int(spaceId / self.boardSize) + 1
+        column = spaceId % self.boardSize + 1
+
+        # Check if there is a space at the left
+        if column > 1:
+            leftSpace = self.get_board_space(s, spaceId - 1)
+
+            # Only add if it's not empty and it's an already seen group
+            if leftSpace > 2:
+                nearbySpaces.append(leftSpace)
+
+        # Check if there is a space at the right
+        if column < self.boardSize:
+            rightSpace = self.get_board_space(s, spaceId + 1)
+
+            # Only add if it's not empty and it's an already seen group
+            if rightSpace > 2:
+                nearbySpaces.append(rightSpace)
+
+        # Check if there is a space at above
+        if row > 1:
+            aboveSpace = self.get_board_space(s, spaceId - self.boardSize)
+
+            # Only add if it's not empty and it's an already seen group
+            if aboveSpace > 2:
+                nearbySpaces.append(aboveSpace)
+
+        # Check if there is a space at the bellow
+        if row < self.boardSize:
+            bellowSpace = self.get_board_space(s, spaceId + self.boardSize)
+
+            # Only add if it's not empty and it's an already seen group
+            if bellowSpace > 2:
+                nearbySpaces.append(bellowSpace)
+
+        return nearbySpaces
 
     # Function that calculates the individual score of each player, without considering the opponent
     @classmethod
@@ -478,6 +498,107 @@ class Game:
 
         print(s)
 
+    # Get the degrees of freedom of one piece
+    def get_piece_dof(self, state, piece):
+        # Maximum possible degrees of freedom for a single piece        
+        dof = 4
+        piece_row = int(piece / self.boardSize) + 1
+        piece_column = piece % self.boardSize + 1
+
+        # Check if the space at the right of the piece exists
+        if piece_column < self.boardSize:
+            # Check if the space at the right of the piece is occupied
+            if self.get_board_space(state, piece + 1) != 0:
+                dof -= 1
+        else:
+            dof -= 1
+
+        # Check if the space at the left of the piece exists
+        if piece_column > 1:
+            # Check if the space at the left of the piece is occupied
+            if self.get_board_space(state, piece - 1) != 0:
+                dof -= 1
+        else:
+            dof -= 1
+
+        # Check if the space above the piece exists
+        if piece_row > 1:
+            # Check if the space above the piece is occupied
+            if self.get_board_space(state, piece - self.boardSize) != 0:
+                dof -= 1
+        else:
+            dof -= 1
+
+        # Check if the space bellow the piece exists
+        if piece_row < self.boardSize:
+            # Check if the space bellow the piece is occupied
+            if self.get_board_space(state, piece + self.boardSize) != 0:
+                dof -= 1
+        else:
+            dof -= 1
+
+        return dof
+
+    # Check if the piece being added wont join any group and would have 0 DOF
+    # Called in sort_actions_simple()
+    def is_suicidal_single_piece(self, s, spaceId):
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + self.boardSize * self.boardSize
+
+        neighboursGroupIds = s[game_pos_in_state].get_nearby_board_spaces(s, spaceId)
+        player = s[1]
+        
+        # Search neighbouring groups
+        for groupId in neighboursGroupIds:
+            # Check if there's an allied group nearby
+            if groupId % 2 == player % 2:
+                # Return false if there's any allied group nearby
+                return False
+
+        if s[game_pos_in_state].get_piece_dof(s, spaceId) == 0:
+            # Return true if there's no nearby allied groups and the piece has 0 DOF
+            return True
+        else:
+            # Return false if the piece has DOF > 0
+            return False          
+
+    @classmethod
+    def copy_game(self, game):
+        # Initialize an empty game
+        copiedGame = Game()
+
+        # Point to the same board size (never changes)
+        copiedGame.boardSize = game.boardSize
+
+        # Create copies of the lists of the Game attributes
+        copiedGame.freeIds = game.freeIds.copy()
+        copiedGame.zeroedGroup = game.zeroedGroup.copy()
+
+        for group in game.groups:
+            # Create a copy of each group
+            copiedGroup = Group.copy_group(group)
+
+            # Add each copied group to the list of groups of the copied game
+            copiedGame.groups.append(copiedGroup)
+
+        return copiedGame
+
+    @classmethod
+    def copy_state(self, s):
+        # The position of the game variable in the state
+        game_pos_in_state = 2 + s[0] * s[0]
+
+        # Make a copy of the game object
+        copiedGame = Game.copy_game(s[game_pos_in_state])
+
+        # Make a copy of the list
+        copiedState = s.copy()
+
+        # Pass the new game object
+        copiedState[game_pos_in_state] = copiedGame
+
+        return copiedState
+
 
 ##########################################################
 #                                                        #
@@ -488,25 +609,40 @@ class Game:
 ##########################################################
 
 class Group:
-    def __init__(self, game, state, piece, player):
+    def __init__(self):
         # Degrees of freedom
-        self.dof = self.get_piece_dof(game, state, piece)
+        self.dof = None
 
         # Set the corresponding player
-        self.player = player
+        self.player = None
 
         # Get the unique ID of the group 
-        self.id = game.freeIds[player-1][0]
+        self.id = None
+
+    @classmethod
+    def create_group(self, game, state, piece, player):
+        newGroup = Group()
+
+        # Degrees of freedom
+        newGroup.dof = newGroup.get_piece_dof(game, state, piece)
+
+        # Set the corresponding player
+        newGroup.player = player
+
+        # Get the unique ID of the group 
+        newGroup.id = game.freeIds[player-1][0]
 
         # Remove the newly assigned group ID from the list of available group IDs
         if len(game.freeIds[player-1]) > 1: 
             game.freeIds[player-1] = game.freeIds[player-1][1:]
         else:
             # If the new ID is the biggest one available, add the next possible ID
-            game.freeIds[player-1][0] = self.id + 2
+            game.freeIds[player-1][0] = newGroup.id + 2
         
         # Add the new group to the game's list of groups
-        game.groups.append(self)
+        game.groups.append(newGroup)
+
+        return newGroup
 
     # Joins two groups and returns the new state and joined group
     def join_group(self, group, game, state, player):
@@ -804,3 +940,15 @@ class Group:
                             groupsDofChanged.append(group.id)
                             break
         return state
+
+    @classmethod
+    def copy_group(self, group):
+        # Initialize copied group
+        copiedGroup = Group()
+
+        # Pass the attributes of the group to copy
+        copiedGroup.dof = group.dof
+        copiedGroup.player = group.player
+        copiedGroup.id = group.id
+
+        return copiedGroup

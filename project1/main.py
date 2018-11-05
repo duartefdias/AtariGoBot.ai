@@ -5,7 +5,7 @@ s = []
 endGame = 0
 
 myGame = go.Game()
-s = myGame.load_board(open('boards/test4_1.txt', 'r'))
+s = myGame.load_board(open('boards/assignment_example.txt', 'r'))
 
 while not endGame:
     # Set playerMove to 0, indicating that the player hasn't yet chosen a valid move
@@ -56,7 +56,7 @@ while not endGame:
     # MAGIC AI code
     
     # Get the AI to decise what's the best move
-    AiMove = alphabeta_cutoff_search(s, myGame, d=5)
+    AiMove = alphabeta_cutoff_search(s, myGame, d=100)
     s = myGame.result(s, AiMove)
 
     # [Debug] Code to debug the max score possible in the current board
