@@ -394,7 +394,12 @@ class Game:
         for i in range(0, self.boardSize * self.boardSize):
             row = int(i / self.boardSize) + 1
             column = i % self.boardSize + 1
+
+            # Flag to check if the action is suicidal
             suicidalPlay = False
+
+            # Flag to check if there's any allied group in the neighbourhood with more than 1 DOF
+            otherAlliedNeighbourMoreThanOneDOF = False
 
             if self.get_board_space(s, i) == 0:
                 neighboursGroupIds = self.get_nearby_board_spaces(s, i)
@@ -424,6 +429,12 @@ class Game:
                                     else:
                                         sortedActions.insert(0, (s[1], row, column))
                                         alreadyPlayed = True
+
+                            else:
+                                if s[1] == group.player:
+                                    otherAlliedNeighbourMoreThanOneDOF = True
+
+                suicidalPlay = suicidalPlay and not otherAlliedNeighbourMoreThanOneDOF
 
                 # Insert every normal/non-suicidal/non-winning possible action to the action list
                 if not suicidalPlay and not alreadyPlayed and not s[game_pos_in_state].is_suicidal_single_piece(s, i):
