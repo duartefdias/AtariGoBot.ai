@@ -574,7 +574,7 @@ class Game:
         copiedGame.freeIds = game.freeIds.copy()
         copiedGame.zeroedGroup = game.zeroedGroup.copy()
 
-        for group in copiedGame.groups:
+        for group in game.groups:
             # Create a copy of each group
             copiedGroup = Group.copy_group(group)
 
